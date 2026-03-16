@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@assistant-ui/x-buildutils": "workspace:*",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "ink": "^6.8.0",
     "ink-testing-library": "^4.0.0",
