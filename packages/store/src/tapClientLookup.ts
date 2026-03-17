@@ -1,5 +1,7 @@
 import {
+  tapEffect,
   tapMemo,
+  tapRef,
   tapResource,
   tapResources,
   type ResourceElement,
@@ -56,12 +58,36 @@ export function tapClientLookup<TMethods extends ClientMethods>(
   const state = tapMemo(() => {
     return resources.map((r) => r.state);
   }, [resources]);
+  const methodsByIndex = tapMemo(() => {
+    return resources.map((r) => r.methods);
+  }, [resources]);
+  const methodsByKey = tapMemo(() => {
+    return resources.reduce(
+      (acc, resource) => {
+        acc[String(resource.key)] = resource.methods;
+        return acc;
+      },
+      {} as Record<string, TMethods>,
+    );
+  }, [resources]);
+  const previousMethodsByIndexRef = tapRef([] as TMethods[]);
+  const previousMethodsByKeyRef = tapRef({} as Record<string, TMethods>);
+
+  tapEffect(() => {
+    previousMethodsByIndexRef.current = methodsByIndex;
+    previousMethodsByKeyRef.current = methodsByKey;
+  }, [methodsByIndex, methodsByKey]);
 
   return {
     state,
     get: (lookup: { index: number } | { key: string }) => {
       if ("index" in lookup) {
         if (lookup.index < 0 || lookup.index >= keys.length) {
+          const previousMethod =
+            previousMethodsByIndexRef.current[lookup.index];
+          if (previousMethod !== undefined) {
+            return previousMethod;
+          }
           throw new Error(
             `tapClientLookup: Index ${lookup.index} out of bounds (length: ${keys.length})`,
           );
@@ -71,6 +97,10 @@ export function tapClientLookup<TMethods extends ClientMethods>(
 
       const index = keyToIndex[lookup.key];
       if (index === undefined) {
+        const previousMethod = previousMethodsByKeyRef.current[lookup.key];
+        if (previousMethod !== undefined) {
+          return previousMethod;
+        }
         throw new Error(`tapClientLookup: Key "${lookup.key}" not found`);
       }
       return resources[index]!.methods;

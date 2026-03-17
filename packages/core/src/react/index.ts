@@ -75,7 +75,10 @@ export {
   ComposerAttachmentByIndexProvider,
 } from "./providers/AttachmentByIndexProvider";
 export { ThreadListItemRuntimeProvider } from "./providers/ThreadListItemRuntimeProvider";
-export { MessageByIndexProvider } from "./providers/MessageByIndexProvider";
+export {
+  MessageByIdProvider,
+  MessageByIndexProvider,
+} from "./providers/MessageByIndexProvider";
 export { PartByIndexProvider } from "./providers/PartByIndexProvider";
 export { TextMessagePartProvider } from "./providers/TextMessagePartProvider";
 export { ChainOfThoughtByIndicesProvider } from "./providers/ChainOfThoughtByIndicesProvider";
@@ -167,6 +170,7 @@ export { getMessageQuote } from "./utils/getMessageQuote";
 
 // Primitive hooks (shared behavior logic)
 export { useThreadMessages } from "./primitive-hooks/useThreadMessages";
+export { useThreadMessageIds } from "./primitive-hooks/useThreadMessageIds";
 export { useThreadIsRunning } from "./primitive-hooks/useThreadIsRunning";
 export { useThreadIsEmpty } from "./primitive-hooks/useThreadIsEmpty";
 export { useComposerSend } from "./primitive-hooks/useComposerSend";

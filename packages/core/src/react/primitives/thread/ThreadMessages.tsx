@@ -6,8 +6,12 @@ import {
   useMemo,
 } from "react";
 import { RenderChildrenWithAccessor, useAuiState } from "@assistant-ui/store";
-import { MessageByIndexProvider } from "../../providers/MessageByIndexProvider";
+import {
+  MessageByIdProvider,
+  MessageByIndexProvider,
+} from "../../providers/MessageByIndexProvider";
 import { MessageState } from "../../../store";
+import { useThreadMessageIds } from "../../primitive-hooks/useThreadMessageIds";
 
 type MessagesComponentConfig =
   | {
@@ -172,14 +176,14 @@ ThreadPrimitiveMessageByIndex.displayName = "ThreadPrimitive.MessageByIndex";
 const ThreadPrimitiveMessagesInner: FC<{
   children: (value: { message: MessageState }) => ReactNode;
 }> = ({ children }) => {
-  const messagesLength = useAuiState((s) => s.thread.messages.length);
+  const messageIds = useThreadMessageIds();
 
   return useMemo(() => {
-    if (messagesLength === 0) return null;
-    return Array.from({ length: messagesLength }, (_, index) => (
-      <MessageByIndexProvider key={index} index={index}>
+    if (messageIds.length === 0) return null;
+    return messageIds.map((messageId) => (
+      <MessageByIdProvider key={messageId} messageId={messageId}>
         <RenderChildrenWithAccessor
-          getItemState={(aui) => aui.thread().message({ index }).getState()}
+          getItemState={(aui) => aui.message().getState()}
         >
           {(getItem) =>
             children({
@@ -189,9 +193,9 @@ const ThreadPrimitiveMessagesInner: FC<{
             })
           }
         </RenderChildrenWithAccessor>
-      </MessageByIndexProvider>
+      </MessageByIdProvider>
     ));
-  }, [messagesLength, children]);
+  }, [messageIds, children]);
 };
 
 /**

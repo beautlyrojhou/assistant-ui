@@ -2,7 +2,7 @@ import { type ComponentType, type FC, memo, useCallback } from "react";
 import { FlatList, type FlatListProps } from "react-native";
 import type { ThreadMessage } from "@assistant-ui/core";
 import { useAuiState } from "@assistant-ui/store";
-import { MessageByIndexProvider } from "@assistant-ui/core/react";
+import { MessageByIdProvider } from "@assistant-ui/core/react";
 
 type MessageComponents =
   | {
@@ -97,16 +97,22 @@ const ThreadMessageComponent: FC<{ components: MessageComponents }> = ({
   return <Component />;
 };
 
-const ThreadMessageByIndex = memo(
-  ({ index, components }: { index: number; components: MessageComponents }) => {
+const ThreadMessageById = memo(
+  ({
+    messageId,
+    components,
+  }: {
+    messageId: string;
+    components: MessageComponents;
+  }) => {
     return (
-      <MessageByIndexProvider index={index}>
+      <MessageByIdProvider messageId={messageId}>
         <ThreadMessageComponent components={components} />
-      </MessageByIndexProvider>
+      </MessageByIdProvider>
     );
   },
   (prev, next) =>
-    prev.index === next.index && prev.components === next.components,
+    prev.messageId === next.messageId && prev.components === next.components,
 );
 
 export const ThreadMessages = ({
@@ -116,8 +122,8 @@ export const ThreadMessages = ({
   const messages = useAuiState((s) => s.thread.messages);
 
   const renderItem = useCallback(
-    ({ index }: { item: ThreadMessage; index: number }) => {
-      return <ThreadMessageByIndex index={index} components={components} />;
+    ({ item }: { item: ThreadMessage }) => {
+      return <ThreadMessageById messageId={item.id} components={components} />;
     },
     [components],
   );
@@ -126,7 +132,7 @@ export const ThreadMessages = ({
 
   return (
     <FlatList
-      data={messages as unknown as ThreadMessage[]}
+      data={messages}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       {...flatListProps}
