@@ -114,6 +114,20 @@ export * as ChainOfThoughtPrimitive from "./primitives/chainOfThought";
 export * as SuggestionPrimitive from "./primitives/suggestion";
 export * as ToolCallPrimitive from "./primitives/toolCall";
 export * as ErrorPrimitive from "./primitives/error";
+export * as ChecklistPrimitive from "./primitives/checklist";
+export {
+  LiveChecklist,
+  type LiveChecklistProps,
+} from "./primitives/checklist/LiveChecklist";
+export {
+  ToolActivityChecklist,
+  type ToolActivityChecklistProps,
+} from "./primitives/checklist/ToolActivityChecklist";
+export {
+  DataChecklist,
+  ChecklistDataUI,
+} from "./primitives/checklist/DataChecklist";
+export type { ChecklistData } from "./primitives/checklist/DataChecklist";
 
 // Re-export shared providers from core/react
 export {
