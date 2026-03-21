@@ -47,6 +47,10 @@ export type {
   ThreadHistoryAdapter,
   FeedbackAdapter,
   SuggestionAdapter,
+  // Checklist types
+  ChecklistItemData,
+  ChecklistItemStatus,
+  ChecklistData,
   // Other
   Unsubscribe,
 } from "@assistant-ui/core";
@@ -127,7 +131,6 @@ export {
   DataChecklist,
   ChecklistDataUI,
 } from "./primitives/checklist/DataChecklist";
-export type { ChecklistData } from "./primitives/checklist/DataChecklist";
 
 // Re-export shared providers from core/react
 export {
@@ -138,6 +141,13 @@ export {
   TextMessagePartProvider,
   ChainOfThoughtPartByIndexProvider,
   SuggestionByIndexProvider,
+} from "@assistant-ui/core/react";
+
+// Checklist hook and utilities from core/react
+export {
+  useToolActivityChecklist,
+  mapToolCallToChecklistItem,
+  type UseToolActivityChecklistOptions,
 } from "@assistant-ui/core/react";
 
 // Model context, tools & clients

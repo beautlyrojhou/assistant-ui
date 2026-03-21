@@ -201,6 +201,11 @@ export { useThreadListNew } from "./primitive-hooks/useThreadListNew";
 export { useEditComposerCancel } from "./primitive-hooks/useEditComposerCancel";
 export { useEditComposerSend } from "./primitive-hooks/useEditComposerSend";
 export { useMessageError } from "./primitive-hooks/useMessageError";
+export {
+  useToolActivityChecklist,
+  mapToolCallToChecklistItem,
+  type UseToolActivityChecklistOptions,
+} from "./primitive-hooks/useToolActivityChecklist";
 
 // Shared AssistantRuntimeProvider
 export { AssistantRuntimeProvider } from "./AssistantRuntimeProvider";

@@ -199,6 +199,9 @@ export {
   type ToolDefinition,
   Tools,
   DataRenderers,
+  useToolActivityChecklist,
+  mapToolCallToChecklistItem,
+  type UseToolActivityChecklistOptions,
 } from "@assistant-ui/core/react";
 
 // Core pass-through (unchanged)
@@ -259,6 +262,7 @@ export * as ThreadListPrimitive from "./primitives/threadList";
 export * as ThreadListItemPrimitive from "./primitives/threadListItem";
 export * as ThreadListItemMorePrimitive from "./primitives/threadListItemMore";
 export * as SelectionToolbarPrimitive from "./primitives/selectionToolbar";
+export * as ChecklistPrimitive from "./primitives/checklist";
 
 export { useMessagePartText } from "./primitives/messagePart/useMessagePartText";
 export { useMessagePartReasoning } from "./primitives/messagePart/useMessagePartReasoning";
@@ -270,6 +274,18 @@ export { useThreadViewportAutoScroll } from "./primitives/thread/useThreadViewpo
 export { useScrollLock } from "./primitives/reasoning/useScrollLock";
 export { useMessageQuote } from "./hooks/useMessageQuote";
 export { useMessageTiming } from "./hooks/useMessageTiming";
+export {
+  LiveChecklist,
+  type LiveChecklist as LiveChecklistPrimitive,
+} from "./primitives/checklist/LiveChecklist";
+export {
+  ToolActivityChecklist,
+  type ToolActivityChecklist as ToolActivityChecklistPrimitive,
+} from "./primitives/checklist/ToolActivityChecklist";
+export {
+  DataChecklist,
+  ChecklistDataUI,
+} from "./primitives/checklist/DataChecklist";
 
 // ============================================================================
 // types
@@ -302,6 +318,12 @@ export type {
   Unsubscribe,
   QuoteInfo,
   CreateAttachment,
+} from "@assistant-ui/core";
+
+export type {
+  ChecklistItemData,
+  ChecklistItemStatus,
+  ChecklistData,
 } from "@assistant-ui/core";
 
 // React component types (from core/react)

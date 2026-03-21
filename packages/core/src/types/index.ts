@@ -45,3 +45,10 @@ export type {
   Unstable_DirectiveSegment,
   Unstable_DirectiveFormatter,
 } from "./mention";
+
+export type {
+  ChecklistItemData,
+  ChecklistItemStatus,
+  ChecklistData,
+} from "./checklist";
+export { flattenChecklistItems } from "./checklist";
