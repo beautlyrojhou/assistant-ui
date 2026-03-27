@@ -385,6 +385,28 @@ export type { ToolExecutionStatus } from "./internal";
 
 export type { Assistant } from "./augmentations";
 
+// === share ===
+
+export { ThreadReadOnly } from "./share/ThreadReadOnly";
+
+export type {
+  SerializedThreadMessage,
+  SerializedAttachment,
+  SerializedSystemMessage,
+  SerializedUserMessage,
+  SerializedAssistantMessage,
+} from "@assistant-ui/core";
+
+export {
+  serializeMessages,
+  deserializeMessages,
+  isSerializedMessages,
+  toMarkdown,
+  toJSON,
+} from "@assistant-ui/core";
+
+export type { ToJSONOptions } from "@assistant-ui/core";
+
 // ============================================================================
 // Backwards compatibility - deprecated exports
 // ============================================================================
