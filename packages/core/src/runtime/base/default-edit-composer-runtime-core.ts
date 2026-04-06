@@ -58,6 +58,7 @@ export class DefaultEditComposerRuntimeCore extends BaseComposerRuntimeCore {
         content: [...message.content, ...this._nonTextParts] as any,
         parentId: this._parentId,
         sourceId: this._sourceId,
+        startRun: true,
       });
     }
 
