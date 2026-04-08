@@ -11,6 +11,7 @@
     "langgraph",
     "google-adk",
     "a2a",
+    "a2ui",
     "langserve",
     "external-store",
 
