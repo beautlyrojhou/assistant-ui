@@ -37,6 +37,7 @@ export function useAgUiRuntime(
       showThinking: options.showThinking ?? true,
       ...(options.onError && { onError: options.onError }),
       ...(options.onCancel && { onCancel: options.onCancel }),
+      ...(options.onCustomEvent && { onCustomEvent: options.onCustomEvent }),
       ...(historyAdapter && { history: historyAdapter }),
       notifyUpdate,
     });
@@ -49,6 +50,7 @@ export function useAgUiRuntime(
     showThinking: options.showThinking ?? true,
     ...(options.onError && { onError: options.onError }),
     ...(options.onCancel && { onCancel: options.onCancel }),
+    ...(options.onCustomEvent && { onCustomEvent: options.onCustomEvent }),
     ...(historyAdapter && { history: historyAdapter }),
   });
 
