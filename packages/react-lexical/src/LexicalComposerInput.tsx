@@ -91,13 +91,30 @@ function KeyboardPlugin({
 
     return mergeRegister(
       editor.registerCommand(
+        KEY_ARROW_DOWN_COMMAND,
+        (event) => {
+          if (!event) return false;
+          return delegateToPlugins(event);
+        },
+        COMMAND_PRIORITY_HIGH,
+      ),
+
+      editor.registerCommand(
+        KEY_ARROW_UP_COMMAND,
+        (event) => {
+          if (!event) return false;
+          return delegateToPlugins(event);
+        },
+        COMMAND_PRIORITY_HIGH,
+      ),
+
+      editor.registerCommand(
         KEY_ENTER_COMMAND,
         (event) => {
           if (!event) return false;
           if (event.isComposing) return false;
           if (event.shiftKey) return false;
 
-          // Let registered plugins (mention, slash command, etc.) handle Enter first
           if (delegateToPlugins(event)) return true;
 
           if (submitMode === "none") return false;
@@ -141,28 +158,10 @@ function KeyboardPlugin({
       ),
 
       editor.registerCommand(
-        KEY_ARROW_DOWN_COMMAND,
-        (event) => {
-          if (event && delegateToPlugins(event)) return true;
-          return false;
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
-
-      editor.registerCommand(
-        KEY_ARROW_UP_COMMAND,
-        (event) => {
-          if (event && delegateToPlugins(event)) return true;
-          return false;
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
-
-      editor.registerCommand(
         KEY_BACKSPACE_COMMAND,
         (event) => {
-          if (event && delegateToPlugins(event)) return true;
-          return false;
+          if (!event) return false;
+          return delegateToPlugins(event);
         },
         COMMAND_PRIORITY_HIGH,
       ),
