@@ -45,14 +45,13 @@ export type Unstable_UseSlashCommandAdapterOptions = {
  * });
  * ```
  */
-export function unstable_useSlashCommandAdapter(
+function useSlashCommandAdapter(
   options: Unstable_UseSlashCommandAdapterOptions,
 ): Unstable_SlashCommandAdapter {
   // Ref keeps adapter identity stable so tap memos don't reset the popover highlight on every render.
   const commandsRef = useRef(options.commands);
   commandsRef.current = options.commands;
 
-  // biome-ignore lint/correctness/useHookAtTopLevel: intentional conditional/nested hook usage
   return useMemo<Unstable_SlashCommandAdapter>(() => {
     const getItems = (): Unstable_SlashCommandItem[] =>
       commandsRef.current.map((cmd) => ({
@@ -89,3 +88,5 @@ export function unstable_useSlashCommandAdapter(
     };
   }, []);
 }
+
+export { useSlashCommandAdapter as unstable_useSlashCommandAdapter };
