@@ -1,62 +1,92 @@
 ---
 title: Slash Commands
-description: Let users type / in the composer to trigger predefined actions from a popover picker.
+description: Let users mix prompt shortcuts and client-side actions in the same composer.
 ---
 
-Slash commands let users type `/` in the composer to open a popover, browse available commands, and execute one. Unlike [mentions](/docs/guides/mentions) (which insert text into the message), slash commands trigger **actions** — the `/command` text is removed from the composer and a callback fires.
+Slash commands let users type `/` in the composer to open a popover, browse available commands, and select one. There are two kinds of slash command — **message commands** are prompt shortcuts that send their text to the LLM, and **command commands** are client-side actions that run locally without sending a message.
 
 ## How It Works
 
-```
-User types "/"  →  Trigger detected  →  Adapter provides commands
-                                              ↓
-              Command executed  ←  User selects command from popover
-                   ↓
-        "/command" text removed from composer
-```
+Every slash command shares the same lifecycle:
 
-The slash command system is built on the same [trigger popover architecture](#trigger-popover-architecture) as mentions. It has two layers:
+1. User types `/` — the trigger is detected and the popover opens
+2. The adapter provides commands — the user selects one
+3. `/command` is inserted into the composer
+4. User types arguments after the command
+5. User presses Send — `onSubmit(args)` fires
 
-1. **Adapter** — provides the list of available commands (flat list by default, or categorized for advanced use)
-2. **SlashCommandRoot** — a convenience wrapper that pre-configures the trigger character (`/`) and action-based select behavior
+The only difference between the two kinds is what happens at submit time:
+
+| `kind`                | Behavior on submit                                            |
+| ------------------- | ------------------------------------------------------------- |
+| `"message"` (default) | Full composer text (`/command args`) sends to the LLM; `onSubmit(args)` runs alongside it |
+| `"command"`           | Composer clears, `onSubmit(args)` runs, nothing is sent the LLM |
 
 ## Quick Start
 
-### 1. Define Commands
+Slash commands require `LexicalComposerInput` from `@assistant-ui/react-lexical`. The Lexical input is what broadcasts cursor position and keyboard events to registered trigger plugins, which is how `SlashCommandRoot` detects the `/` trigger and intercepts Enter for `kind: "command"` items.
+
+```bash
+npm install @assistant-ui/react-lexical
+```
+
+### Define commands
 
 ```tsx
 import {
   unstable_useSlashCommandAdapter,
   ComposerPrimitive,
 } from "@assistant-ui/react";
-
-// Define commands outside the component for a stable reference
-const COMMANDS = [
-  {
-    name: "summarize",
-    description: "Summarize the conversation",
-    execute: () => console.log("Summarize!"),
-  },
-  {
-    name: "translate",
-    description: "Translate text to another language",
-    execute: () => console.log("Translate!"),
-  },
-  {
-    name: "help",
-    description: "List all available commands",
-  },
-];
+import { LexicalComposerInput } from "@assistant-ui/react-lexical";
+import { useAui, useAuiState } from "@assistant-ui/store";
+import { toast } from "sonner";
 
 function MyComposer() {
+  const aui = useAui();
+  const threadIsEmpty = useAuiState((s) => s.thread.isEmpty);
+
   const slashAdapter = unstable_useSlashCommandAdapter({
-    commands: COMMANDS,
+    commands: [
+      // Prompt shortcut — `/summarize` inserts summarize prompt into composer.
+      {
+        name: "summarize",
+        description: "Summarize the conversation",
+      },
+      // Prompt shortcut with a side effect — the message still sends.
+      {
+        name: "translate",
+        description: "Translate text",
+        onSubmit: (args) => track("translate", args),
+      },
+      // Client-side command — `onSubmit` runs, renames thread, no message is sent.
+      {
+        name: "rename",
+        description: "Rename this thread",
+        kind: "command",
+        onSubmit: (newTitle) => {
+          try {
+            aui.threadListItem().rename(newTitle);
+          } catch {
+            threadIsEmpty
+              ? toast.error("Can't rename empty thread.")
+              : toast.error("Failed to rename thread.");
+          }
+        },
+      },
+      // Zero-arg client-side command — `/help` then Enter opens the dialog.
+      {
+        name: "help",
+        description: "List all available commands",
+        kind: "command",
+        onSubmit: () => openHelpDialog(),
+      },
+    ],
   });
 
   return (
     <ComposerPrimitive.Unstable_SlashCommandRoot adapter={slashAdapter}>
       <ComposerPrimitive.Root>
-        <ComposerPrimitive.Input placeholder="Type / for commands..." />
+        <LexicalComposerInput placeholder="Type / for commands..." />
         <ComposerPrimitive.Send>Send</ComposerPrimitive.Send>
 
         <ComposerPrimitive.Unstable_TriggerPopoverPopover className="popover">
@@ -82,31 +112,9 @@ function MyComposer() {
 }
 ```
 
-### 2. Handle Command Selection
-
-There are two ways to handle command execution:
-
-**Via `execute` on each item** — define the action inline in the command definition:
-
-```ts
-{ name: "summarize", execute: () => runSummarize() }
-```
-
-**Via `onSelect` prop** — handle all commands in one place:
-
-```tsx
-<ComposerPrimitive.Unstable_SlashCommandRoot
-  adapter={slashAdapter}
-  onSelect={(item) => {
-    switch (item.id) {
-      case "summarize": runSummarize(); break;
-      case "translate": runTranslate(); break;
-    }
-  }}
->
-```
-
-Both `execute` and `onSelect` fire when a command is selected. Use whichever pattern fits your code.
+<Callout type="info">
+The `index` prop on `TriggerPopoverItem` is an optional performance hint — passing the map index lets the primitive skip an internal `findIndex` lookup when resolving keyboard-highlight state. Omit it and the primitive falls back to searching `items` by `id`.
+</Callout>
 
 ## Custom Adapter
 
@@ -128,14 +136,38 @@ const adapter: Unstable_SlashCommandAdapter = {
   categoryItems(categoryId) {
     if (categoryId === "actions") {
       return [
-        { id: "summarize", type: "command", label: "/summarize", description: "Summarize the conversation" },
-        { id: "translate", type: "command", label: "/translate", description: "Translate text" },
+        {
+          id: "summarize",
+          type: "command",
+          label: "/summarize",
+          description: "Summarize the conversation",
+        },
+        {
+          id: "translate",
+          type: "command",
+          label: "/translate",
+          description: "Translate text",
+        },
       ];
     }
     if (categoryId === "export") {
       return [
-        { id: "pdf", type: "command", label: "/export pdf", description: "Export as PDF" },
-        { id: "markdown", type: "command", label: "/export md", description: "Export as Markdown" },
+        {
+          id: "pdf",
+          type: "command",
+          label: "/export pdf",
+          description: "Export as PDF",
+          kind: "command",
+          onSubmit: () => exportPdf(),
+        },
+        {
+          id: "markdown",
+          type: "command",
+          label: "/export md",
+          description: "Export as Markdown",
+          kind: "command",
+          onSubmit: () => exportMarkdown(),
+        },
       ];
     }
     return [];
@@ -144,9 +176,14 @@ const adapter: Unstable_SlashCommandAdapter = {
   // Optional — enables search across all categories
   search(query) {
     const lower = query.toLowerCase();
-    const all = [...this.categoryItems("actions"), ...this.categoryItems("export")];
+    const all = [
+      ...this.categoryItems("actions"),
+      ...this.categoryItems("export"),
+    ];
     return all.filter(
-      (item) => item.label.toLowerCase().includes(lower) || item.description?.toLowerCase().includes(lower),
+      (item) =>
+        item.label.toLowerCase().includes(lower) ||
+        item.description?.toLowerCase().includes(lower),
     );
   },
 };
@@ -156,23 +193,60 @@ When using a categorized adapter, add `TriggerPopoverCategories` to your popover
 
 ```tsx
 <ComposerPrimitive.Unstable_TriggerPopoverPopover>
-  <ComposerPrimitive.Unstable_TriggerPopoverBack>← Back</ComposerPrimitive.Unstable_TriggerPopoverBack>
+  <ComposerPrimitive.Unstable_TriggerPopoverBack>
+    ← Back
+  </ComposerPrimitive.Unstable_TriggerPopoverBack>
   <ComposerPrimitive.Unstable_TriggerPopoverCategories>
-    {(categories) => categories.map((cat) => (
-      <ComposerPrimitive.Unstable_TriggerPopoverCategoryItem key={cat.id} categoryId={cat.id}>
-        {cat.label}
-      </ComposerPrimitive.Unstable_TriggerPopoverCategoryItem>
-    ))}
+    {(categories) =>
+      categories.map((cat) => (
+        <ComposerPrimitive.Unstable_TriggerPopoverCategoryItem
+          key={cat.id}
+          categoryId={cat.id}
+        >
+          {cat.label}
+        </ComposerPrimitive.Unstable_TriggerPopoverCategoryItem>
+      ))
+    }
   </ComposerPrimitive.Unstable_TriggerPopoverCategories>
   <ComposerPrimitive.Unstable_TriggerPopoverItems>
-    {(items) => items.map((item, index) => (
-      <ComposerPrimitive.Unstable_TriggerPopoverItem key={item.id} item={item} index={index}>
-        {item.label}
-      </ComposerPrimitive.Unstable_TriggerPopoverItem>
-    ))}
+    {(items) =>
+      items.map((item, index) => (
+        <ComposerPrimitive.Unstable_TriggerPopoverItem
+          key={item.id}
+          item={item}
+          index={index}
+        >
+          {item.label}
+        </ComposerPrimitive.Unstable_TriggerPopoverItem>
+      ))
+    }
   </ComposerPrimitive.Unstable_TriggerPopoverItems>
 </ComposerPrimitive.Unstable_TriggerPopoverPopover>
 ```
+
+## Reading State
+
+Use `unstable_useTriggerPopoverContext` to access the popover state programmatically. Slash commands share the same generic trigger popover context that mentions use — there is no slash-command-specific hook:
+
+```tsx
+import { unstable_useTriggerPopoverContext } from "@assistant-ui/react";
+
+function MyCustomPopover() {
+  const popover = unstable_useTriggerPopoverContext();
+
+  // popover.open              — whether a trigger is currently active
+  // popover.query             — search text after the "/"
+  // popover.items             — filtered item list
+  // popover.categories        — filtered category list (empty for the flat hook)
+  // popover.activeCategoryId  — id of the drilled-in category, or null
+  // popover.highlightedIndex  — keyboard-navigated index into the visible list
+  // popover.isSearchMode      — true when displaying search results
+  // popover.selectItem(item)  — programmatically select an item
+  // popover.close()           — close the popover
+}
+```
+
+This hook must be used inside a `ComposerPrimitive.Unstable_SlashCommandRoot` (or any other `TriggerPopoverRoot`). An optional variant, `unstable_useTriggerPopoverContextOptional`, returns `null` instead of throwing when no root is present.
 
 ## Combining with Mentions
 
@@ -188,29 +262,42 @@ Slash commands and mentions can coexist on the same composer. Nest both roots �
       {/* Mention popover — shows when @ is typed */}
       <ComposerPrimitive.Unstable_MentionPopover>
         <ComposerPrimitive.Unstable_MentionCategories>
-          {(categories) => categories.map((cat) => (
-            <ComposerPrimitive.Unstable_MentionCategoryItem key={cat.id} categoryId={cat.id}>
-              {cat.label}
-            </ComposerPrimitive.Unstable_MentionCategoryItem>
-          ))}
+          {(categories) =>
+            categories.map((cat) => (
+              <ComposerPrimitive.Unstable_MentionCategoryItem
+                key={cat.id}
+                categoryId={cat.id}
+              >
+                {cat.label}
+              </ComposerPrimitive.Unstable_MentionCategoryItem>
+            ))
+          }
         </ComposerPrimitive.Unstable_MentionCategories>
         <ComposerPrimitive.Unstable_MentionItems>
-          {(items) => items.map((item) => (
-            <ComposerPrimitive.Unstable_MentionItem key={item.id} item={item}>
-              {item.label}
-            </ComposerPrimitive.Unstable_MentionItem>
-          ))}
+          {(items) =>
+            items.map((item) => (
+              <ComposerPrimitive.Unstable_MentionItem key={item.id} item={item}>
+                {item.label}
+              </ComposerPrimitive.Unstable_MentionItem>
+            ))
+          }
         </ComposerPrimitive.Unstable_MentionItems>
       </ComposerPrimitive.Unstable_MentionPopover>
 
       {/* Slash command popover — shows when / is typed */}
       <ComposerPrimitive.Unstable_TriggerPopoverPopover>
         <ComposerPrimitive.Unstable_TriggerPopoverItems>
-          {(items) => items.map((item, index) => (
-            <ComposerPrimitive.Unstable_TriggerPopoverItem key={item.id} item={item} index={index}>
-              {item.label}
-            </ComposerPrimitive.Unstable_TriggerPopoverItem>
-          ))}
+          {(items) =>
+            items.map((item, index) => (
+              <ComposerPrimitive.Unstable_TriggerPopoverItem
+                key={item.id}
+                item={item}
+                index={index}
+              >
+                {item.label}
+              </ComposerPrimitive.Unstable_TriggerPopoverItem>
+            ))
+          }
         </ComposerPrimitive.Unstable_TriggerPopoverItems>
       </ComposerPrimitive.Unstable_TriggerPopoverPopover>
     </ComposerPrimitive.Root>
@@ -224,13 +311,14 @@ Each root provides its own `TriggerPopoverContext`. When the user types `@`, the
 
 Same keyboard bindings as mentions:
 
-| Key | Action |
-| --- | --- |
-| <Kbd>ArrowDown</Kbd> | Highlight next item |
-| <Kbd>ArrowUp</Kbd> | Highlight previous item |
-| <Kbd>Enter</Kbd> | Execute highlighted command / drill into category |
-| <Kbd>Escape</Kbd> | Close popover |
-| <Kbd>Backspace</Kbd> | Go back to categories (when query is empty) |
+| Key                  | Action                                           |
+| -------------------- | ------------------------------------------------ |
+| <Kbd>ArrowDown</Kbd> | Highlight next item                              |
+| <Kbd>ArrowUp</Kbd>   | Highlight previous item                          |
+| <Kbd>Enter</Kbd>     | Select highlighted command / drill into category |
+| <Kbd>Tab</Kbd>       | Select highlighted command                       |
+| <Kbd>Escape</Kbd>    | Close popover                                    |
+| <Kbd>Backspace</Kbd> | Go back to categories (when query is empty)      |
 
 ## Trigger Popover Architecture
 
@@ -238,7 +326,7 @@ Both mentions and slash commands are built on a generic **trigger popover** syst
 
 - `ComposerPrimitive.Unstable_TriggerPopoverRoot` — the generic root, parameterized by trigger character and select behavior
 - `ComposerPrimitive.Unstable_MentionRoot` — preset with `trigger="@"` and `onSelect: insertDirective`
-- `ComposerPrimitive.Unstable_SlashCommandRoot` — preset with `trigger="/"` and `onSelect: action`
+- `ComposerPrimitive.Unstable_SlashCommandRoot` — preset with `trigger="/"` and slash-command submit handling
 
 The trigger popover primitives (`TriggerPopoverPopover`, `TriggerPopoverItems`, etc.) are shared across both. You can also use `TriggerPopoverRoot` directly to build custom trigger systems with other characters (e.g. `:` for emoji).
 
@@ -253,20 +341,20 @@ type ComposerInputPlugin = {
 };
 ```
 
-The input iterates over registered plugins for keyboard events and cursor changes. This is what enables multiple trigger roots to coexist without conflict.
+The input iterates over registered plugins for keyboard events and cursor changes. This is what enables multiple trigger roots to coexist without conflict, and is also how `SlashCommandRoot` intercepts Enter for `kind: "command"` items to suppress the send.
 
 ## Primitives Reference
 
-| Primitive | Description |
-| --- | --- |
-| `Unstable_SlashCommandRoot` | Convenience wrapper — `TriggerPopoverRoot` with `trigger="/"` and action behavior |
-| `Unstable_TriggerPopoverRoot` | Generic root — configurable trigger character and select behavior |
-| `Unstable_TriggerPopoverPopover` | Container — only renders when a trigger is active (`role="listbox"`) |
-| `Unstable_TriggerPopoverCategories` | Render-function for the top-level category list |
-| `Unstable_TriggerPopoverCategoryItem` | Button that drills into a category (`role="option"`, auto `data-highlighted`) |
-| `Unstable_TriggerPopoverItems` | Render-function for items within the active category or search results |
-| `Unstable_TriggerPopoverItem` | Button that selects an item (`role="option"`, auto `data-highlighted`) |
-| `Unstable_TriggerPopoverBack` | Button that navigates back from items to categories |
+| Primitive                             | Description                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `Unstable_SlashCommandRoot`           | Convenience wrapper — `TriggerPopoverRoot` with `trigger="/"` and slash-command submit handling        |
+| `Unstable_TriggerPopoverRoot`         | Generic root — configurable trigger character and select behavior                                      |
+| `Unstable_TriggerPopoverPopover`      | Container — only renders when a trigger is active (`role="listbox"`)                                   |
+| `Unstable_TriggerPopoverCategories`   | Render-function for the top-level category list                                                        |
+| `Unstable_TriggerPopoverCategoryItem` | Button that drills into a category (`role="option"`, auto `data-highlighted`)                          |
+| `Unstable_TriggerPopoverItems`        | Render-function for items within the active category or search results                                 |
+| `Unstable_TriggerPopoverItem`         | Button that selects an item (`role="option"`, auto `data-highlighted`)                                 |
+| `Unstable_TriggerPopoverBack`         | Button that navigates back from items to categories                                                    |
 
 ## Related
 

@@ -27,13 +27,17 @@ export type Unstable_TriggerAdapter = {
 };
 
 // =============================================================================
-// Slash Command Item — extends TriggerItem with an execute callback
+// Slash Command Item — extends TriggerItem with a kind discriminator
 // =============================================================================
 
 export type Unstable_SlashCommandItem = Unstable_TriggerItem & {
-  /** Action to execute when the command is selected. */
-  readonly execute?: (() => void) | undefined;
+  /** `"message"` (default): sends as a chat message. `"command"`: intercepts submit, runs client-side. */
+  readonly kind?: Unstable_SlashCommandKind | undefined;
+  /** Fires on submit with the text typed after `/command `. */
+  readonly onSubmit?: ((args: string) => void | Promise<void>) | undefined;
 };
+
+export type Unstable_SlashCommandKind = "message" | "command";
 
 // =============================================================================
 // Slash Command Adapter — extends TriggerAdapter with narrower return types

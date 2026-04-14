@@ -135,6 +135,7 @@ export { unstable_defaultDirectiveFormatter } from "./adapters/mention";
 // Slash command adapter
 export type {
   Unstable_SlashCommandAdapter,
+  Unstable_SlashCommandKind,
   Unstable_SlashCommandItem,
 } from "./adapters/trigger";
 

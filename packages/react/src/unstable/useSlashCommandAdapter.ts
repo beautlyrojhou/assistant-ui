@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type {
   Unstable_SlashCommandAdapter,
   Unstable_SlashCommandItem,
+  Unstable_SlashCommandKind,
   Unstable_TriggerCategory,
 } from "@assistant-ui/core";
 
@@ -16,8 +17,10 @@ export type Unstable_SlashCommandDefinition = {
   readonly description?: string | undefined;
   /** Icon identifier. */
   readonly icon?: string | undefined;
-  /** Action to execute when the command is selected. */
-  readonly execute?: (() => void) | undefined;
+  /** `"message"` (default): sends as a chat message. `"command"`: intercepts submit, runs client-side. */
+  readonly kind?: Unstable_SlashCommandKind | undefined;
+  /** Fires on submit with the text typed after `/command `. */
+  readonly onSubmit?: ((args: string) => void | Promise<void>) | undefined;
 };
 
 export type Unstable_UseSlashCommandAdapterOptions = {
@@ -32,10 +35,12 @@ export type Unstable_UseSlashCommandAdapterOptions = {
  *
  * @example
  * ```tsx
- * const slashAdapter = unstable_useSlashCommandAdapter({
+ * unstable_useSlashCommandAdapter({
  *   commands: [
- *     { name: "summarize", description: "Summarize the conversation", execute: () => {} },
- *     { name: "translate", description: "Translate text", execute: () => {} },
+ *     { name: "summarize", description: "Summarize the conversation" },
+ *     { name: "translate", description: "Translate text", onSubmit: (args) => track(args) },
+ *     { name: "rename", kind: "command", description: "Rename thread", onSubmit: (n) => rename(n) },
+ *     { name: "help", kind: "command", description: "Show help", onSubmit: () => openHelp() },
  *   ],
  * });
  * ```
@@ -43,19 +48,21 @@ export type Unstable_UseSlashCommandAdapterOptions = {
 export function unstable_useSlashCommandAdapter(
   options: Unstable_UseSlashCommandAdapterOptions,
 ): Unstable_SlashCommandAdapter {
-  const { commands } = options;
+  // Ref keeps adapter identity stable so tap memos don't reset the popover highlight on every render.
+  const commandsRef = useRef(options.commands);
+  commandsRef.current = options.commands;
 
   // biome-ignore lint/correctness/useHookAtTopLevel: intentional conditional/nested hook usage
   return useMemo<Unstable_SlashCommandAdapter>(() => {
-    // Build items lazily at call time so execute callbacks are always fresh
     const getItems = (): Unstable_SlashCommandItem[] =>
-      commands.map((cmd) => ({
+      commandsRef.current.map((cmd) => ({
         id: cmd.name,
         type: "command",
         label: cmd.label ?? `/${cmd.name}`,
         description: cmd.description,
         icon: cmd.icon,
-        execute: cmd.execute,
+        kind: cmd.kind,
+        onSubmit: cmd.onSubmit,
       }));
 
     return {
@@ -80,5 +87,5 @@ export function unstable_useSlashCommandAdapter(
         );
       },
     };
-  }, [commands]);
+  }, []);
 }

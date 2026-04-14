@@ -414,6 +414,7 @@ export {
   type Unstable_SlashCommandDefinition,
   type Unstable_UseSlashCommandAdapterOptions,
 } from "./unstable/useSlashCommandAdapter";
+export type { Unstable_SlashCommandKind } from "@assistant-ui/core";
 
 export type { Assistant } from "./augmentations";
 

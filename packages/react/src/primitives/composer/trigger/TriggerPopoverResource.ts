@@ -329,6 +329,17 @@ export const TriggerPopoverResource = resource(
             close();
             return true;
           }
+          case "Tab": {
+            if (e.shiftKey) return false;
+            const tabItem = navigableList[highlightedIndex];
+            if (!tabItem) return true;
+            if (isTriggerItem(tabItem)) {
+              e.preventDefault();
+              selectItem(tabItem);
+              return true;
+            }
+            return false;
+          }
           case "Backspace": {
             if (effectiveActiveCategoryId && query === "") {
               e.preventDefault();

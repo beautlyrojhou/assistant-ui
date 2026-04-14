@@ -35,7 +35,7 @@ import {
   ThreadPrimitive,
   unstable_useSlashCommandAdapter,
 } from "@assistant-ui/react";
-import type { Unstable_SlashCommandItem } from "@assistant-ui/core";
+import { useAui, useAuiState } from "@assistant-ui/store";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -52,19 +52,27 @@ import {
   MoreHorizontalIcon,
   PanelLeftIcon,
   PencilIcon,
+  PenLineIcon,
   RefreshCwIcon,
   ShareIcon,
   SlashIcon,
   SquareIcon,
 } from "lucide-react";
 import { LexicalComposerInput } from "@assistant-ui/react-lexical";
-import { useAui } from "@assistant-ui/store";
 import Image from "next/image";
-import { useCallback, useState, type FC } from "react";
+import { useState, type FC } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ModelSelector } from "@/components/assistant-ui/model-selector";
 import { docsModelOptions } from "@/components/docs/assistant/docs-model-options";
 import { DEFAULT_MODEL_ID } from "@/constants/model";
+import { toast } from "sonner";
 
 const Logo: FC = () => {
   return (
@@ -260,58 +268,65 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
-const slashCommands = [
-  {
-    name: "summarize",
-    description: "Summarize the conversation",
-    icon: "FileText",
-  },
-  {
-    name: "translate",
-    description: "Translate text to another language",
-    icon: "Languages",
-  },
-  {
-    name: "search",
-    description: "Search the web for information",
-    icon: "Globe",
-  },
-  {
-    name: "help",
-    description: "List available commands",
-    icon: "HelpCircle",
-  },
-] as const;
-
 const slashCommandIcons: Record<string, FC<{ className?: string }>> = {
   FileText: FileTextIcon,
   Languages: LanguagesIcon,
   Globe: GlobeIcon,
   HelpCircle: HelpCircleIcon,
+  PenLine: PenLineIcon,
 };
 
 const Composer: FC = () => {
   const aui = useAui();
+  const threadIsEmpty = useAuiState((s) => s.thread.isEmpty);
+  const [helpOpen, setHelpOpen] = useState(false);
   const slashAdapter = unstable_useSlashCommandAdapter({
-    commands: slashCommands,
+    commands: [
+      {
+        name: "summarize",
+        description: "Summarize the conversation",
+        icon: "FileText",
+      },
+      {
+        name: "translate",
+        description: "Translate text to another language",
+        icon: "Languages",
+      },
+      {
+        name: "search",
+        description: "Search the web for information",
+        icon: "Globe",
+      },
+      {
+        name: "help",
+        description: "List available commands",
+        icon: "HelpCircle",
+        kind: "command",
+        onSubmit: () => setHelpOpen(true),
+      },
+      {
+        name: "rename",
+        description: "Rename this thread",
+        icon: "PenLine",
+        kind: "command",
+        onSubmit: (newTitle) => {
+          try {
+            aui.threadListItem().rename(newTitle);
+          } catch {
+            toast.error(
+              threadIsEmpty
+                ? "Can't rename empty thread."
+                : "Failed to rename thread.",
+            );
+          }
+        },
+      },
+    ],
   });
-
-  const handleSlashCommand = useCallback(
-    (item: Unstable_SlashCommandItem) => {
-      // Fill the composer with the command description as a prompt and send
-      const prompt = item.description ?? item.id;
-      aui.composer().setText(prompt);
-      aui.composer().send();
-    },
-    [aui],
-  );
 
   return (
     <ComposerMentionRoot>
-      <ComposerPrimitive.Unstable_SlashCommandRoot
-        adapter={slashAdapter}
-        onSelect={handleSlashCommand}
-      >
+      <ComposerPrimitive.Unstable_SlashCommandRoot adapter={slashAdapter}>
         <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
           <ComposerPrimitive.AttachmentDropzone asChild>
             <div
@@ -322,13 +337,78 @@ const Composer: FC = () => {
               <ComposerAttachments />
               <LexicalComposerInput
                 placeholder="Send a message... (@ to mention, / for commands)"
-                className="aui-composer-input relative max-h-32 min-h-10 w-full resize-none bg-transparent px-1.75 py-1 text-sm outline-none [&_.aui-lexical-input]:min-h-[1lh] [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-0 [&_.aui-lexical-placeholder]:left-0 [&_.aui-lexical-placeholder]:px-1.75 [&_.aui-lexical-placeholder]:py-1 [&_.aui-lexical-placeholder]:text-muted-foreground/80 [&_.aui-mention-chip]:mx-0.5 [&_.aui-mention-chip]:inline-flex [&_.aui-mention-chip]:translate-y-[-1px] [&_.aui-mention-chip]:items-center [&_.aui-mention-chip]:gap-1 [&_.aui-mention-chip]:rounded-full [&_.aui-mention-chip]:border [&_.aui-mention-chip]:border-primary/20 [&_.aui-mention-chip]:bg-primary/5 [&_.aui-mention-chip]:px-2 [&_.aui-mention-chip]:py-0.5 [&_.aui-mention-chip]:font-medium [&_.aui-mention-chip]:text-[13px] [&_.aui-mention-chip]:text-primary [&_.aui-mention-chip]:leading-none"
+                className="aui-composer-input relative max-h-32 min-h-10 w-full resize-none bg-transparent px-1.75 py-1 text-sm outline-none [&_.aui-lexical-input]:min-h-lh [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-0 [&_.aui-lexical-placeholder]:left-0 [&_.aui-lexical-placeholder]:px-1.75 [&_.aui-lexical-placeholder]:py-1 [&_.aui-lexical-placeholder]:text-muted-foreground/80 [&_.aui-mention-chip]:mx-0.5 [&_.aui-mention-chip]:inline-flex [&_.aui-mention-chip]:-translate-y-px [&_.aui-mention-chip]:items-center [&_.aui-mention-chip]:gap-1 [&_.aui-mention-chip]:rounded-full [&_.aui-mention-chip]:border [&_.aui-mention-chip]:border-primary/20 [&_.aui-mention-chip]:bg-primary/5 [&_.aui-mention-chip]:px-2 [&_.aui-mention-chip]:py-0.5 [&_.aui-mention-chip]:font-medium [&_.aui-mention-chip]:text-[13px] [&_.aui-mention-chip]:text-primary [&_.aui-mention-chip]:leading-none"
               />
               <ComposerAction />
             </div>
           </ComposerPrimitive.AttachmentDropzone>
           <ComposerMentionPopover />
           <SlashCommandPopover />
+          <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Slash Commands</DialogTitle>
+                <DialogDescription>
+                  Available commands in this composer.
+                </DialogDescription>
+              </DialogHeader>
+              <ul className="flex flex-col gap-1.5 text-sm">
+                <li>
+                  <code className="font-medium font-mono">/summarize</code>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    - Summarize the conversation
+                  </span>
+                </li>
+                <li>
+                  <code className="font-medium font-mono">/translate</code>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    - Translate text to another language
+                  </span>
+                </li>
+                <li>
+                  <code className="font-medium font-mono">/search</code>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    - Search the web for information
+                  </span>
+                </li>
+                <li>
+                  <code className="font-medium font-mono">/rename</code>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    - Rename this thread
+                  </span>
+                </li>
+                <li>
+                  <code className="font-medium font-mono">/help</code>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    - List available commands
+                  </span>
+                </li>
+              </ul>
+              <div className="mt-2 flex flex-col gap-1">
+                <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  Examples
+                </p>
+                <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
+                  <li>
+                    <code className="font-mono">
+                      /summarize last 5 messages
+                    </code>
+                  </li>
+                  <li>
+                    <code className="font-mono">/translate to Spanish</code>
+                  </li>
+                  <li>
+                    <code className="font-mono">/rename Project kickoff</code>
+                  </li>
+                </ul>
+              </div>
+            </DialogContent>
+          </Dialog>
         </ComposerPrimitive.Root>
       </ComposerPrimitive.Unstable_SlashCommandRoot>
     </ComposerMentionRoot>
@@ -348,14 +428,14 @@ const SlashCommandPopover: FC = () => {
                   key={item.id}
                   item={item}
                   index={index}
-                  className="flex w-full cursor-pointer flex-col items-start gap-0.5 px-3 py-2 text-left outline-none transition-colors hover:bg-accent focus:bg-accent data-[highlighted]:bg-accent"
+                  className="flex w-full cursor-pointer flex-col items-start gap-0.5 px-3 py-2 text-left outline-none transition-colors hover:bg-accent focus:bg-accent data-highlighted:bg-accent"
                 >
-                  <span className="flex items-center gap-2 font-medium text-sm">
+                  <span className="flex items-center gap-3 font-medium text-sm">
                     <IconComp className="size-3.5 text-primary" />
                     {item.label}
                   </span>
                   {item.description && (
-                    <span className="ml-5.5 text-muted-foreground text-xs leading-tight">
+                    <span className="ml-6.5 text-muted-foreground text-xs leading-tight">
                       {item.description}
                     </span>
                   )}
