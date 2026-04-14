@@ -3,13 +3,13 @@ title: Slash Commands
 description: Let users mix prompt shortcuts and client-side actions in the same composer.
 ---
 
-Slash commands let users type `/` in the composer to open a popover, browse available commands, and select one. There are two kinds of slash command — **message commands** are prompt shortcuts that send their text to the LLM, and **command commands** are client-side actions that run locally without sending a message.
+Slash commands let users type `/` at the **beginning of the composer** to open a popover, browse available commands, and select one. There are two kinds of slash command — **message commands** are prompt shortcuts that send their text to the LLM, and **command commands** are client-side actions that run locally without sending a message.
 
 ## How It Works
 
 Every slash command shares the same lifecycle:
 
-1. User types `/` — the trigger is detected and the popover opens
+1. User types `/` at the start of the composer — the trigger is detected and the popover opens
 2. The adapter provides commands — the user selects one
 3. `/command` is inserted into the composer
 4. User types arguments after the command
@@ -250,7 +250,7 @@ This hook must be used inside a `ComposerPrimitive.Unstable_SlashCommandRoot` (o
 
 ## Combining with Mentions
 
-Slash commands and mentions can coexist on the same composer. Nest both roots — the [plugin protocol](#trigger-popover-architecture) ensures they don't conflict:
+Slash commands and mentions can coexist on the same composer. Slash commands only trigger at the start of the draft; mentions can still appear anywhere. Nest both roots — the [plugin protocol](#trigger-popover-architecture) ensures they don't conflict:
 
 ```tsx
 <ComposerPrimitive.Unstable_MentionRoot adapter={mentionAdapter}>

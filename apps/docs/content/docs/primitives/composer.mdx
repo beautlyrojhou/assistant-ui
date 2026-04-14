@@ -117,7 +117,7 @@ Composer includes an unstable **trigger popover** system for character-triggered
 </ComposerPrimitive.Unstable_MentionRoot>
 ```
 
-**Slash commands** (`/` trigger) — selecting a command inserts `/command ` into the composer; on submit, `onSubmit(args)` fires. `kind: "message"` (default) sends the text as a chat message; `kind: "command"` intercepts the submit and runs client-side without sending anything to the LLM:
+**Slash commands** (`/` trigger at the start of the input) — selecting a command inserts `/command ` into the composer; on submit, `onSubmit(args)` fires. `kind: "message"` (default) sends the text as a chat message; `kind: "command"` intercepts the submit and runs client-side without sending anything to the LLM:
 
 ```tsx
 <ComposerPrimitive.Unstable_SlashCommandRoot adapter={slashAdapter}>

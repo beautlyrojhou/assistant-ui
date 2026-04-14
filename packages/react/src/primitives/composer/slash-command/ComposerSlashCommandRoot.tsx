@@ -12,13 +12,15 @@ import type {
   Unstable_SlashCommandAdapter,
   Unstable_SlashCommandItem,
 } from "@assistant-ui/core";
-import { useAui } from "@assistant-ui/store";
+import { useAui, useAuiState } from "@assistant-ui/store";
 import { ComposerPrimitiveTriggerPopoverRoot } from "../trigger/TriggerPopoverContext";
 import type { OnSelectBehavior } from "../trigger/TriggerPopoverResource";
 import {
   useComposerInputPluginRegistryOptional,
   type ComposerInputPlugin,
 } from "../ComposerInputPluginContext";
+
+const DISABLED_SLASH_TRIGGER = "\0";
 
 // =============================================================================
 // SlashCommandRoot — convenience wrapper around TriggerPopoverRoot
@@ -62,7 +64,11 @@ export const ComposerPrimitiveSlashCommandRoot: FC<
   ComposerPrimitiveSlashCommandRoot.Props
 > = ({ children, adapter, trigger = "/" }) => {
   const aui = useAui();
+  const text = useAuiState((s) => s.composer.text);
   const pluginRegistry = useComposerInputPluginRegistryOptional();
+  const effectiveTrigger = text.startsWith(trigger)
+    ? trigger
+    : DISABLED_SLASH_TRIGGER;
 
   const activeCommandRef = useRef<{
     item: Unstable_SlashCommandItem;
@@ -139,7 +145,7 @@ export const ComposerPrimitiveSlashCommandRoot: FC<
   return (
     <ComposerPrimitiveTriggerPopoverRoot
       adapter={adapter}
-      trigger={trigger}
+      trigger={effectiveTrigger}
       onSelect={onSelect}
     >
       {children}
