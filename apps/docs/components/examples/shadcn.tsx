@@ -37,6 +37,7 @@ import {
 } from "@assistant-ui/react";
 import { useAui, useAuiState } from "@assistant-ui/store";
 import {
+  ArchiveIcon,
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
@@ -44,10 +45,7 @@ import {
   ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
-  FileTextIcon,
-  GlobeIcon,
   HelpCircleIcon,
-  LanguagesIcon,
   MenuIcon,
   MoreHorizontalIcon,
   PanelLeftIcon,
@@ -269,9 +267,7 @@ const ThreadSuggestionItem: FC = () => {
 };
 
 const slashCommandIcons: Record<string, FC<{ className?: string }>> = {
-  FileText: FileTextIcon,
-  Languages: LanguagesIcon,
-  Globe: GlobeIcon,
+  Archive: ArchiveIcon,
   HelpCircle: HelpCircleIcon,
   PenLine: PenLineIcon,
 };
@@ -283,21 +279,6 @@ const Composer: FC = () => {
   const slashAdapter = unstable_useSlashCommandAdapter({
     commands: [
       {
-        name: "summarize",
-        description: "Summarize the conversation",
-        icon: "FileText",
-      },
-      {
-        name: "translate",
-        description: "Translate text to another language",
-        icon: "Languages",
-      },
-      {
-        name: "search",
-        description: "Search the web for information",
-        icon: "Globe",
-      },
-      {
         name: "help",
         description: "List available commands",
         icon: "HelpCircle",
@@ -305,13 +286,25 @@ const Composer: FC = () => {
         onSubmit: () => setHelpOpen(true),
       },
       {
+        name: "archive",
+        description: "Archive this thread",
+        kind: "command",
+        onSubmit: async () => {
+          try {
+            await aui.threadListItem().archive();
+          } catch {
+            toast.error("Failed to archive thread.");
+          }
+        },
+      },
+      {
         name: "rename",
         description: "Rename this thread",
         icon: "PenLine",
         kind: "command",
-        onSubmit: (newTitle) => {
+        onSubmit: async (newTitle) => {
           try {
-            aui.threadListItem().rename(newTitle);
+            await aui.threadListItem().rename(newTitle);
           } catch {
             toast.error(
               threadIsEmpty
@@ -354,24 +347,17 @@ const Composer: FC = () => {
               </DialogHeader>
               <ul className="flex flex-col gap-1.5 text-sm">
                 <li>
-                  <code className="font-medium font-mono">/summarize</code>
+                  <code className="font-medium font-mono">/help</code>
                   <span className="text-muted-foreground">
                     {" "}
-                    - Summarize the conversation
+                    - List available commands
                   </span>
                 </li>
                 <li>
-                  <code className="font-medium font-mono">/translate</code>
+                  <code className="font-medium font-mono">/archive</code>
                   <span className="text-muted-foreground">
                     {" "}
-                    - Translate text to another language
-                  </span>
-                </li>
-                <li>
-                  <code className="font-medium font-mono">/search</code>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    - Search the web for information
+                    - Archive this thread
                   </span>
                 </li>
                 <li>
@@ -381,13 +367,6 @@ const Composer: FC = () => {
                     - Rename this thread
                   </span>
                 </li>
-                <li>
-                  <code className="font-medium font-mono">/help</code>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    - List available commands
-                  </span>
-                </li>
               </ul>
               <div className="mt-2 flex flex-col gap-1">
                 <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
@@ -395,12 +374,10 @@ const Composer: FC = () => {
                 </p>
                 <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
                   <li>
-                    <code className="font-mono">
-                      /summarize last 5 messages
-                    </code>
+                    <code className="font-mono">/help</code>
                   </li>
                   <li>
-                    <code className="font-mono">/translate to Spanish</code>
+                    <code className="font-mono">/archive</code>
                   </li>
                   <li>
                     <code className="font-mono">/rename Project kickoff</code>

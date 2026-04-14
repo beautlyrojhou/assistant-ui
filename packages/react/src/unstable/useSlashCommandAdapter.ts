@@ -37,10 +37,8 @@ export type Unstable_UseSlashCommandAdapterOptions = {
  * ```tsx
  * unstable_useSlashCommandAdapter({
  *   commands: [
- *     { name: "summarize", description: "Summarize the conversation" },
- *     { name: "translate", description: "Translate text", onSubmit: (args) => track(args) },
+ *     { name: "help", kind: "command", description: "Show available commands", onSubmit: () => openHelp() },
  *     { name: "rename", kind: "command", description: "Rename thread", onSubmit: (n) => rename(n) },
- *     { name: "help", kind: "command", description: "Show help", onSubmit: () => openHelp() },
  *   ],
  * });
  * ```

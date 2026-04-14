@@ -1,9 +1,9 @@
 ---
 title: Slash Commands
-description: Let users mix prompt shortcuts and client-side actions in the same composer.
+description: Let users trigger slash commands and custom workflows from the composer.
 ---
 
-Slash commands let users type `/` at the **beginning of the composer** to open a popover, browse available commands, and select one. There are two kinds of slash command — **message commands** are prompt shortcuts that send their text to the LLM, and **command commands** are client-side actions that run locally without sending a message.
+Slash commands let users type `/` at the **beginning of the composer** to open a popover, browse available commands, and select one. There are two kinds of slash command — **message commands** send the slash-prefixed text to the LLM, and **command commands** are client-side actions that run locally without sending a message.
 
 ## How It Works
 
@@ -17,10 +17,10 @@ Every slash command shares the same lifecycle:
 
 The only difference between the two kinds is what happens at submit time:
 
-| `kind`                | Behavior on submit                                            |
-| ------------------- | ------------------------------------------------------------- |
+| `kind`                | Behavior on submit                                                                        |
+| --------------------- | ----------------------------------------------------------------------------------------- |
 | `"message"` (default) | Full composer text (`/command args`) sends to the LLM; `onSubmit(args)` runs alongside it |
-| `"command"`           | Composer clears, `onSubmit(args)` runs, nothing is sent the LLM |
+| `"command"`           | Composer clears, `onSubmit(args)` runs, nothing is sent the LLM                           |
 
 ## Quick Start
 
@@ -47,16 +47,12 @@ function MyComposer() {
 
   const slashAdapter = unstable_useSlashCommandAdapter({
     commands: [
-      // Prompt shortcut — `/summarize` inserts summarize prompt into composer.
+      // Client-side command — `onSubmit` runs, opens a help dialog, no message is sent.
       {
-        name: "summarize",
-        description: "Summarize the conversation",
-      },
-      // Prompt shortcut with a side effect — the message still sends.
-      {
-        name: "translate",
-        description: "Translate text",
-        onSubmit: (args) => track("translate", args),
+        name: "help",
+        description: "List available commands",
+        kind: "command",
+        onSubmit: () => openHelpDialog(),
       },
       // Client-side command — `onSubmit` runs, renames thread, no message is sent.
       {
@@ -72,13 +68,6 @@ function MyComposer() {
               : toast.error("Failed to rename thread.");
           }
         },
-      },
-      // Zero-arg client-side command — `/help` then Enter opens the dialog.
-      {
-        name: "help",
-        description: "List all available commands",
-        kind: "command",
-        onSubmit: () => openHelpDialog(),
       },
     ],
   });
@@ -113,8 +102,13 @@ function MyComposer() {
 ```
 
 <Callout type="info">
-The `index` prop on `TriggerPopoverItem` is an optional performance hint — passing the map index lets the primitive skip an internal `findIndex` lookup when resolving keyboard-highlight state. Omit it and the primitive falls back to searching `items` by `id`.
+  The `index` prop on `TriggerPopoverItem` is an optional performance hint —
+  passing the map index lets the primitive skip an internal `findIndex` lookup
+  when resolving keyboard-highlight state. Omit it and the primitive falls back
+  to searching `items` by `id`.
 </Callout>
+
+If you want slash commands to fill prompt templates or rewrite text before sending, build that behavior in a custom adapter or custom submit flow instead of relying on the built-in examples here.
 
 ## Custom Adapter
 
@@ -137,16 +131,20 @@ const adapter: Unstable_SlashCommandAdapter = {
     if (categoryId === "actions") {
       return [
         {
-          id: "summarize",
+          id: "help",
           type: "command",
-          label: "/summarize",
-          description: "Summarize the conversation",
+          label: "/help",
+          description: "List available commands",
+          kind: "command",
+          onSubmit: () => openHelpDialog(),
         },
         {
-          id: "translate",
+          id: "archive",
           type: "command",
-          label: "/translate",
-          description: "Translate text",
+          label: "/archive",
+          description: "Archive this thread",
+          kind: "command",
+          onSubmit: () => archiveThread(),
         },
       ];
     }
@@ -345,16 +343,16 @@ The input iterates over registered plugins for keyboard events and cursor change
 
 ## Primitives Reference
 
-| Primitive                             | Description                                                                                            |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `Unstable_SlashCommandRoot`           | Convenience wrapper — `TriggerPopoverRoot` with `trigger="/"` and slash-command submit handling        |
-| `Unstable_TriggerPopoverRoot`         | Generic root — configurable trigger character and select behavior                                      |
-| `Unstable_TriggerPopoverPopover`      | Container — only renders when a trigger is active (`role="listbox"`)                                   |
-| `Unstable_TriggerPopoverCategories`   | Render-function for the top-level category list                                                        |
-| `Unstable_TriggerPopoverCategoryItem` | Button that drills into a category (`role="option"`, auto `data-highlighted`)                          |
-| `Unstable_TriggerPopoverItems`        | Render-function for items within the active category or search results                                 |
-| `Unstable_TriggerPopoverItem`         | Button that selects an item (`role="option"`, auto `data-highlighted`)                                 |
-| `Unstable_TriggerPopoverBack`         | Button that navigates back from items to categories                                                    |
+| Primitive                             | Description                                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `Unstable_SlashCommandRoot`           | Convenience wrapper — `TriggerPopoverRoot` with `trigger="/"` and slash-command submit handling |
+| `Unstable_TriggerPopoverRoot`         | Generic root — configurable trigger character and select behavior                               |
+| `Unstable_TriggerPopoverPopover`      | Container — only renders when a trigger is active (`role="listbox"`)                            |
+| `Unstable_TriggerPopoverCategories`   | Render-function for the top-level category list                                                 |
+| `Unstable_TriggerPopoverCategoryItem` | Button that drills into a category (`role="option"`, auto `data-highlighted`)                   |
+| `Unstable_TriggerPopoverItems`        | Render-function for items within the active category or search results                          |
+| `Unstable_TriggerPopoverItem`         | Button that selects an item (`role="option"`, auto `data-highlighted`)                          |
+| `Unstable_TriggerPopoverBack`         | Button that navigates back from items to categories                                             |
 
 ## Related
 
