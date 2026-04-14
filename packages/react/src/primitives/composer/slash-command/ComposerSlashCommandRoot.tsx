@@ -87,24 +87,30 @@ export const ComposerPrimitiveSlashCommandRoot: FC<
       handleKeyDown(e) {
         const active = activeCommandRef.current;
         if (!active) return false;
+        if (e.key !== "Enter" || e.shiftKey) return false;
 
-        if (e.key === "Enter" && !e.shiftKey) {
-          const text = aui.composer().getState().text;
-          const args = text.slice(active.prefix.length).trim();
-          const kind = active.item.kind ?? "message";
+        const text = aui.composer().getState().text;
+        const args = text.slice(active.prefix.length).trim();
+        const kind = active.item.kind ?? "message";
+        const onSubmit = active.item.onSubmit;
 
-          active.item.onSubmit?.(args);
-          activeCommandRef.current = null;
+        e.preventDefault();
+        activeCommandRef.current = null;
 
-          if (kind === "command") {
-            e.preventDefault();
-            aui.composer().setText("");
-            return true;
+        void (async () => {
+          try {
+            await onSubmit?.(args);
+          } catch (error) {
+            console.error("[SlashCommand] onSubmit threw", error);
           }
-          return false;
-        }
+          if (kind === "command") {
+            aui.composer().setText("");
+          } else {
+            aui.composer().send();
+          }
+        })();
 
-        return false;
+        return true;
       },
       setCursorPosition() {},
     }),
