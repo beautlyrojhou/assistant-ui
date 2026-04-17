@@ -7,8 +7,6 @@
  *    sub-groups at every depth,
  *  - each node gets a structural `nodeKey` built from its sibling indices
  *    (`"0.1.2"`), stable under append-only streaming.
- *
- * See `PARTS_GROUPING_DESIGN_V3.md` for the full semantics.
  */
 
 export type GroupKey = string | readonly string[] | null | undefined;

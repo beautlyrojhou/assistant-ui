@@ -416,7 +416,7 @@ const EmptyParts = memo(
  * it composes with the render-prop `<MessagePrimitive.Parts>` children API and
  * supports nested group paths. Keep this primitive only for non-adjacent
  * clustering (e.g., gathering parts with the same parent-id across the
- * message). See `PARTS_GROUPING_DESIGN_V3.md`.
+ * message).
  *
  * @example
  * ```tsx

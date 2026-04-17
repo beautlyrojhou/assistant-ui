@@ -134,19 +134,22 @@ const groupMessageParts = (
   return ranges;
 };
 
+const EMPTY_RANGES: MessagePartRange[] = [];
+
 const useMessagePartsGroups = (
   useChainOfThought: boolean,
+  skip: boolean,
 ): MessagePartRange[] => {
   const messageTypes = useAuiState(
-    useShallow((s) => s.message.parts.map((c: any) => c.type)),
+    useShallow((s) => (skip ? [] : s.message.parts.map((c: any) => c.type))),
   );
 
   return useMemo(() => {
-    if (messageTypes.length === 0) {
-      return [];
+    if (skip || messageTypes.length === 0) {
+      return EMPTY_RANGES;
     }
     return groupMessageParts(messageTypes, useChainOfThought);
-  }, [messageTypes, useChainOfThought]);
+  }, [messageTypes, useChainOfThought, skip]);
 };
 
 export namespace MessagePrimitiveParts {
@@ -671,7 +674,7 @@ const MessagePrimitivePartsCompat: FC<{
   const range = useContext(PartRangeContext);
   const contentLength = useAuiState((s) => s.message.parts.length);
   const useChainOfThought = !!components?.ChainOfThought;
-  const messageRanges = useMessagePartsGroups(useChainOfThought);
+  const messageRanges = useMessagePartsGroups(useChainOfThought, !!range);
 
   const partsElements = useMemo(() => {
     if (contentLength === 0) {

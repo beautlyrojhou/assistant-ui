@@ -4,7 +4,10 @@ import { type FC, type ReactNode, useMemo } from "react";
 import { useAuiState } from "@assistant-ui/store";
 import { useShallow } from "zustand/shallow";
 import type { PartState } from "../../../store/scopes/part";
-import type { MessagePartStatus } from "../../../types/message";
+import type {
+  MessagePartStatus,
+  ToolCallMessagePartStatus,
+} from "../../../types/message";
 import {
   buildGroupTree,
   type GroupKey,
@@ -28,7 +31,7 @@ export namespace MessagePrimitivePartGroups {
     /** True iff the last contained part is still streaming. */
     readonly isStreaming: boolean;
     /** Status of the last contained part. */
-    readonly status: MessagePartStatus;
+    readonly status: MessagePartStatus | ToolCallMessagePartStatus;
     /**
      * For groups: the recursively-rendered inner content.
      * For leaf runs (groupKey === null): a sentinel element that throws on
@@ -83,8 +86,7 @@ const renderNode = (
   parts: readonly PartState[],
   render: (info: MessagePrimitivePartGroups.GroupInfo) => ReactNode,
 ): ReactNode => {
-  const status = (parts[node.indices.at(-1)!]?.status ??
-    COMPLETE_STATUS) as MessagePartStatus;
+  const status = parts[node.indices.at(-1)!]?.status ?? COMPLETE_STATUS;
 
   const info: MessagePrimitivePartGroups.GroupInfo = {
     keyPath: node.keyPath,
