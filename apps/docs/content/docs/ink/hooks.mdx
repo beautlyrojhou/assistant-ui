@@ -60,6 +60,50 @@ useAuiEvent("thread.runStart", (payload) => {
 });
 ```
 
+### useNotification
+
+Emit terminal or custom notifications when a run completes, stops with an error, or pauses for input.
+
+```tsx
+import { useNotification } from "@assistant-ui/react-ink";
+
+useNotification();
+```
+
+Default behavior:
+
+- `task-complete`: bell + OSC 9
+- `task-incomplete`: bell
+- `needs-input`: bell
+
+```tsx
+useNotification({
+  onTaskComplete: {
+    osc: { variant: "osc99" },
+  },
+  onNeedsInput: {
+    bell: true,
+  },
+});
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `enabled` | `boolean` | Master switch for all notifications |
+| `onTaskComplete` | `NotificationHandlerConfig` | Fired when a run ends with assistant status `complete` |
+| `onTaskIncomplete` | `NotificationHandlerConfig` | Fired when a run ends with assistant status `incomplete` |
+| `onNeedsInput` | `NotificationHandlerConfig` | Fired when the latest assistant message transitions into `requires-action` |
+
+`NotificationHandlerConfig` fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `bell` | `boolean` | Ring the terminal bell (`\x07`) |
+| `osc` | `boolean \| { variant?: "osc9" \| "osc99" \| "osc777" }` | Send an OSC terminal notification. `true` is equivalent to `{ variant: "osc9" }` |
+| `custom` | `(event: NotificationEvent) => void` | Invoke a custom callback with the notification event |
+
+For `osc9` and `osc99`, the emitted message text is `body ?? title`. `osc777` uses both `title` and `body` separately.
+
 ## Runtime Hooks
 
 ### useLocalRuntime
@@ -258,6 +302,31 @@ useAssistantToolUI({ toolName: "get_weather", render });
 ```
 
 ## Runtime Providers
+
+### NotificationProvider
+
+Provide app-wide notification defaults via React context. Local `useNotification()` config overrides provider defaults.
+
+```tsx
+import { NotificationProvider } from "@assistant-ui/react-ink";
+
+<NotificationProvider
+  config={{
+    onTaskComplete: {
+      bell: true,
+      osc: { variant: "osc9" },
+    },
+  }}
+>
+  <App />
+</NotificationProvider>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `config` | `NotificationConfig` | Default notification config for nested `useNotification()` calls |
+
+OSC support depends on the terminal emulator. `osc9`, `osc99`, and `osc777` are supported by the helper API, but not every terminal handles every variant.
 
 ### AssistantRuntimeProvider
 

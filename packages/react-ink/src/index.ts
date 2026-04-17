@@ -97,6 +97,13 @@ export {
 
 // Context providers
 export { AssistantRuntimeProvider } from "./context/AssistantContext";
+export {
+  NotificationProvider,
+  type NotificationConfig,
+  type NotificationEvent,
+  type NotificationHandlerConfig,
+  type OSCVariant,
+} from "./context/providers/NotificationProvider";
 
 // Runtime
 export {
@@ -104,6 +111,8 @@ export {
   type LocalRuntimeOptions,
 } from "./runtimes/useLocalRuntime";
 export { useRemoteThreadListRuntime } from "./runtimes/useRemoteThreadListRuntime";
+export { useNotification } from "./hooks/useNotification";
+export { ringBell, sendOSCNotification } from "./hooks/notification-channels";
 
 // Primitives
 export * as ThreadPrimitive from "./primitives/thread";
