@@ -177,11 +177,12 @@ Container `Box` for the composer area.
 
 ### Input
 
-Ink `TextInput` wired to the composer runtime. Value is managed automatically.
+Terminal line editor wired to the composer runtime. Value is managed automatically and supports cursor-aware editing.
 
 ```tsx
 <ComposerPrimitive.Input
   submitOnEnter
+  multiLine
   placeholder="Type a message..."
   autoFocus
 />
@@ -192,6 +193,31 @@ Ink `TextInput` wired to the composer runtime. Value is managed automatically.
 | `submitOnEnter` | `boolean` | Whether Enter sends the message (default: `false`) |
 | `placeholder` | `string` | Placeholder text when empty |
 | `autoFocus` | `boolean` | Auto-focus on mount |
+| `multiLine` | `boolean` | When true, Enter inserts a newline unless `submitOnEnter` is enabled |
+| `onSubmit` | `(text: string) => void` | Overrides the default send behavior and receives the current composer text |
+
+Supported keyboard behavior:
+
+- Left and right arrows move the cursor within the buffer
+- `Backspace` and `Delete` remove text relative to the cursor
+- `Home` and `End` jump to buffer boundaries in single-line mode, or line boundaries in multi-line mode
+- In multi-line mode, up and down arrows move between lines while preserving column when possible
+- `Ctrl+A`, `Ctrl+E`, `Ctrl+J`, `Ctrl+W`, `Ctrl+U`, and `Ctrl+K` provide readline-style editing
+- `Alt+B` and `Alt+F` move by word when the terminal reports them as meta-key input
+- `Ctrl+J` always inserts a newline in multi-line mode
+- `Shift+Enter` also inserts a newline in multi-line submit mode when the terminal reports it distinctly
+
+Example with custom submit handling:
+
+```tsx
+<ComposerPrimitive.Input
+  multiLine
+  submitOnEnter
+  onSubmit={(text) => {
+    console.log("submit", text);
+  }}
+/>
+```
 
 ### Send
 
