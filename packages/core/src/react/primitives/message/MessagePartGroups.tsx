@@ -87,9 +87,7 @@ const renderNode = (
     keyPath: node.keyPath,
     depth: node.depth,
     indices: node.indices,
-    get parts() {
-      return node.indices.map((i) => parts[i]!);
-    },
+    parts: node.indices.map((i) => parts[i]!),
     isStreaming: status.type === "running",
     status,
     ...(node.type === "leaf"

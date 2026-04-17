@@ -26,7 +26,6 @@ import {
   AuiIf,
   BranchPickerPrimitive,
   ComposerPrimitive,
-  type EnrichedPartState,
   ErrorPrimitive,
   MessagePrimitive,
   SuggestionPrimitive,
@@ -223,20 +222,6 @@ const MessageError: FC = () => {
   );
 };
 
-const renderAssistantPart = ({ part }: { part: EnrichedPartState }) => {
-  if (part.type === "text") return <MarkdownText />;
-  if (part.type === "reasoning") return <Reasoning />;
-  if (part.type === "tool-call")
-    return part.toolUI ?? <ToolFallback {...part} />;
-  return null;
-};
-
-const assistantGroupBy = (part: EnrichedPartState) => {
-  if (part.type === "reasoning") return "reasoning";
-  if (part.type === "tool-call") return "tool";
-  return null;
-};
-
 const AssistantMessage: FC = () => {
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
@@ -254,7 +239,13 @@ const AssistantMessage: FC = () => {
         data-slot="aui_assistant-message-content"
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
-        <MessagePrimitive.PartGroups groupBy={assistantGroupBy}>
+        <MessagePrimitive.PartGroups
+          groupBy={(part) => {
+            if (part.type === "reasoning") return "reasoning";
+            if (part.type === "tool-call") return "tool";
+            return null;
+          }}
+        >
           {({ groupKey, isStreaming, indices, children }) => {
             switch (groupKey) {
               case "reasoning":
@@ -276,10 +267,17 @@ const AssistantMessage: FC = () => {
                     <ToolGroupContent>{children}</ToolGroupContent>
                   </ToolGroupRoot>
                 );
-              case null:
+              default:
                 return (
                   <MessagePrimitive.Parts>
-                    {renderAssistantPart}
+                    {({ part }) => {
+                      if (part.type === "text") return <MarkdownText />;
+                      if (part.type === "reasoning")
+                        return <Reasoning {...part} />;
+                      if (part.type === "tool-call")
+                        return part.toolUI ?? <ToolFallback {...part} />;
+                      return null;
+                    }}
                   </MessagePrimitive.Parts>
                 );
             }

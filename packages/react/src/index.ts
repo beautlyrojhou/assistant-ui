@@ -333,6 +333,7 @@ export type {
   QuoteMessagePartComponent,
   QuoteMessagePartProps,
   EnrichedPartState,
+  PartState,
 } from "@assistant-ui/core/react";
 
 // Thread list item types

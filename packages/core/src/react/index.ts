@@ -163,6 +163,7 @@ export {
   MessagePrimitivePartByIndex,
   defaultComponents as messagePartsDefaultComponents,
   type EnrichedPartState,
+  type PartState,
 } from "./primitives/message/MessageParts";
 export { MessagePrimitivePartGroups } from "./primitives/message/MessagePartGroups";
 export {

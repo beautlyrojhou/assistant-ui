@@ -668,6 +668,7 @@ const MessagePrimitivePartsCompat: FC<{
   components: MessagePrimitiveParts.Props["components"];
   unstable_showEmptyOnNonTextEnd: boolean;
 }> = ({ components, unstable_showEmptyOnNonTextEnd }) => {
+  const range = useContext(PartRangeContext);
   const contentLength = useAuiState((s) => s.message.parts.length);
   const useChainOfThought = !!components?.ChainOfThought;
   const messageRanges = useMessagePartsGroups(useChainOfThought);
@@ -675,6 +676,16 @@ const MessagePrimitivePartsCompat: FC<{
   const partsElements = useMemo(() => {
     if (contentLength === 0) {
       return <EmptyParts components={components} />;
+    }
+
+    if (range) {
+      return range.map((index) => (
+        <MessagePrimitivePartByIndex
+          key={index}
+          index={index}
+          components={components}
+        />
+      ));
     }
 
     return messageRanges.map((range) => {
@@ -743,7 +754,7 @@ const MessagePrimitivePartsCompat: FC<{
         );
       }
     });
-  }, [messageRanges, components, contentLength]);
+  }, [messageRanges, components, contentLength, range]);
 
   return (
     <>
