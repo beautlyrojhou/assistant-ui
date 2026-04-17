@@ -209,6 +209,12 @@ const ToolGroupImpl: FC<
   );
 };
 
+/**
+ * @deprecated This wrapper targets the legacy `components.ToolGroup` prop on
+ * `<MessagePrimitive.Parts>`. Use `<MessagePrimitive.PartGroups>` with a
+ * `groupBy` returning `"tool"` and compose `ToolGroupRoot` / `ToolGroupTrigger`
+ * / `ToolGroupContent` directly. See `thread.tsx` for an example.
+ */
 const ToolGroup = memo(ToolGroupImpl) as unknown as ToolGroupComponent;
 
 ToolGroup.displayName = "ToolGroup";

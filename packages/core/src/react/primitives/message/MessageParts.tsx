@@ -4,6 +4,7 @@ import {
   type ReactNode,
   memo,
   type PropsWithChildren,
+  useContext,
   useMemo,
 } from "react";
 import {
@@ -11,6 +12,7 @@ import {
   useAuiState,
   useAui,
 } from "@assistant-ui/store";
+import { PartRangeContext } from "./PartRangeContext";
 import type { PartState } from "../../../store/scopes/part";
 import { PartByIndexProvider } from "../../providers/PartByIndexProvider";
 import { TextMessagePartProvider } from "../../providers/TextMessagePartProvider";
@@ -207,7 +209,7 @@ export namespace MessagePrimitiveParts {
      * @param endIndex - Index of the last tool call in the group
      * @param children - Rendered tool call components to display within the group
      *
-     * @deprecated This feature is still experimental and subject to change.
+     * @deprecated Use `<MessagePrimitive.PartGroups>` with a custom `groupBy` instead.
      */
     ToolGroup?: ComponentType<
       PropsWithChildren<{ startIndex: number; endIndex: number }>
@@ -219,6 +221,8 @@ export namespace MessagePrimitiveParts {
      * @param startIndex - Index of the first reasoning part in the group
      * @param endIndex - Index of the last reasoning part in the group
      * @param children - Rendered reasoning part components
+     *
+     * @deprecated Use `<MessagePrimitive.PartGroups>` with a custom `groupBy` instead.
      */
     ReasoningGroup?: ReasoningGroupComponent;
 
@@ -233,6 +237,11 @@ export namespace MessagePrimitiveParts {
    * `ToolGroup` components cannot be used alongside it.
    */
   type ChainOfThoughtComponents = BaseComponents & {
+    /**
+     * @deprecated Use `<MessagePrimitive.PartGroups>` with a `groupBy` that
+     * returns `["thought", ...]` for reasoning and tool-call parts. See the
+     * V3 recipe in `@assistant-ui/ui`.
+     */
     ChainOfThought: ComponentType;
 
     Reasoning?: never;
@@ -583,54 +592,52 @@ const MessagePrimitivePartsInner: FC<{
   children: (value: { part: EnrichedPartState }) => ReactNode;
 }> = ({ children }) => {
   const aui = useAui();
+  const range = useContext(PartRangeContext);
   const contentLength = useAuiState((s) => s.message.parts.length);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: aui accessors are stable refs
-  return useMemo(
-    () =>
-      Array.from({ length: contentLength }, (_, index) => (
-        <PartByIndexProvider key={index} index={index}>
-          <RenderChildrenWithAccessor
-            getItemState={(aui) => aui.message().part({ index }).getState()}
-          >
-            {(getItem) => {
-              const result = children({
-                get part() {
-                  const state = getItem();
-                  if (state.type === "tool-call") {
-                    const entry = aui.tools().getState().tools[state.toolName];
-                    const hasUI = Array.isArray(entry) ? !!entry[0] : !!entry;
-                    const partMethods = aui.message().part({ index });
-                    return {
-                      ...state,
-                      toolUI: hasUI ? <RegisteredToolUI /> : null,
-                      addResult: partMethods.addToolResult,
-                      resume: partMethods.resumeToolCall,
-                    };
-                  }
-                  if (state.type === "data") {
-                    const entry = aui.dataRenderers().getState().renderers[
-                      state.name
-                    ];
-                    const hasUI = Array.isArray(entry) ? !!entry[0] : !!entry;
-                    return {
-                      ...state,
-                      dataRendererUI: hasUI ? (
-                        <RegisteredDataRendererUI />
-                      ) : null,
-                    };
-                  }
-                  return state;
-                },
-              });
-              if (result !== null) return result;
-              return <DefaultPartFallback />;
-            }}
-          </RenderChildrenWithAccessor>
-        </PartByIndexProvider>
-      )),
-    [contentLength, children],
-  );
+  return useMemo(() => {
+    const indices = range ?? Array.from({ length: contentLength }, (_, i) => i);
+    return indices.map((index) => (
+      <PartByIndexProvider key={index} index={index}>
+        <RenderChildrenWithAccessor
+          getItemState={(aui) => aui.message().part({ index }).getState()}
+        >
+          {(getItem) => {
+            const result = children({
+              get part() {
+                const state = getItem();
+                if (state.type === "tool-call") {
+                  const entry = aui.tools().getState().tools[state.toolName];
+                  const hasUI = Array.isArray(entry) ? !!entry[0] : !!entry;
+                  const partMethods = aui.message().part({ index });
+                  return {
+                    ...state,
+                    toolUI: hasUI ? <RegisteredToolUI /> : null,
+                    addResult: partMethods.addToolResult,
+                    resume: partMethods.resumeToolCall,
+                  };
+                }
+                if (state.type === "data") {
+                  const entry = aui.dataRenderers().getState().renderers[
+                    state.name
+                  ];
+                  const hasUI = Array.isArray(entry) ? !!entry[0] : !!entry;
+                  return {
+                    ...state,
+                    dataRendererUI: hasUI ? <RegisteredDataRendererUI /> : null,
+                  };
+                }
+                return state;
+              },
+            });
+            if (result !== null) return result;
+            return <DefaultPartFallback />;
+          }}
+        </RenderChildrenWithAccessor>
+      </PartByIndexProvider>
+    ));
+  }, [range, contentLength, children]);
 };
 
 /**

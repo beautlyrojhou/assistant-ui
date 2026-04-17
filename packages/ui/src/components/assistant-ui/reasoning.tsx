@@ -260,6 +260,13 @@ Reasoning.Content = ReasoningContent;
 Reasoning.Text = ReasoningText;
 Reasoning.Fade = ReasoningFade;
 
+/**
+ * @deprecated This wrapper targets the legacy `components.ReasoningGroup` prop
+ * on `<MessagePrimitive.Parts>`. Use `<MessagePrimitive.PartGroups>` with a
+ * `groupBy` returning `"reasoning"` and compose the `ReasoningRoot` /
+ * `ReasoningTrigger` / `ReasoningContent` / `ReasoningText` building blocks
+ * inside the render function. See `thread.tsx` for an example.
+ */
 const ReasoningGroup = memo(ReasoningGroupImpl);
 ReasoningGroup.displayName = "ReasoningGroup";
 

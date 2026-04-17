@@ -332,6 +332,7 @@ export type {
   ReasoningGroupComponent,
   QuoteMessagePartComponent,
   QuoteMessagePartProps,
+  EnrichedPartState,
 } from "@assistant-ui/core/react";
 
 // Thread list item types

@@ -4,9 +4,20 @@ import {
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningRoot,
+  ReasoningText,
+  ReasoningTrigger,
+} from "@/components/assistant-ui/reasoning";
+import {
+  ToolGroupContent,
+  ToolGroupRoot,
+  ToolGroupTrigger,
+} from "@/components/assistant-ui/tool-group";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-import { Reasoning, ReasoningGroup } from "@/components/assistant-ui/reasoning";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -15,6 +26,7 @@ import {
   AuiIf,
   BranchPickerPrimitive,
   ComposerPrimitive,
+  type EnrichedPartState,
   ErrorPrimitive,
   MessagePrimitive,
   SuggestionPrimitive,
@@ -211,6 +223,20 @@ const MessageError: FC = () => {
   );
 };
 
+const renderAssistantPart = ({ part }: { part: EnrichedPartState }) => {
+  if (part.type === "text") return <MarkdownText />;
+  if (part.type === "reasoning") return <Reasoning />;
+  if (part.type === "tool-call")
+    return part.toolUI ?? <ToolFallback {...part} />;
+  return null;
+};
+
+const assistantGroupBy = (part: EnrichedPartState) => {
+  if (part.type === "reasoning") return "reasoning";
+  if (part.type === "tool-call") return "tool";
+  return null;
+};
+
 const AssistantMessage: FC = () => {
   // reserves space for action bar and compensates with `-mb` for consistent msg spacing
   // keeps hovered action bar from shifting layout (autohide doesn't support absolute positioning well)
@@ -228,14 +254,37 @@ const AssistantMessage: FC = () => {
         data-slot="aui_assistant-message-content"
         className="wrap-break-word px-2 text-foreground leading-relaxed"
       >
-        <MessagePrimitive.Parts
-          components={{
-            Text: MarkdownText,
-            Reasoning,
-            ReasoningGroup,
-            tools: { Fallback: ToolFallback },
+        <MessagePrimitive.PartGroups groupBy={assistantGroupBy}>
+          {({ groupKey, isStreaming, indices, children }) => {
+            switch (groupKey) {
+              case "reasoning":
+                return (
+                  <ReasoningRoot defaultOpen={isStreaming}>
+                    <ReasoningTrigger active={isStreaming} />
+                    <ReasoningContent aria-busy={isStreaming}>
+                      <ReasoningText>{children}</ReasoningText>
+                    </ReasoningContent>
+                  </ReasoningRoot>
+                );
+              case "tool":
+                return (
+                  <ToolGroupRoot>
+                    <ToolGroupTrigger
+                      count={indices.length}
+                      active={isStreaming}
+                    />
+                    <ToolGroupContent>{children}</ToolGroupContent>
+                  </ToolGroupRoot>
+                );
+              case null:
+                return (
+                  <MessagePrimitive.Parts>
+                    {renderAssistantPart}
+                  </MessagePrimitive.Parts>
+                );
+            }
           }}
-        />
+        </MessagePrimitive.PartGroups>
         <MessageError />
       </div>
 
