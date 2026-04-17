@@ -166,12 +166,7 @@ export {
   type PartState,
 } from "./primitives/message/MessageParts";
 export { MessagePrimitivePartGroups } from "./primitives/message/MessagePartGroups";
-export {
-  type GroupKey,
-  type GroupNode,
-  normalizeGroupKey,
-  buildGroupTree,
-} from "./utils/groupParts";
+export type { GroupKey } from "./utils/groupParts";
 export { MessagePrimitiveQuote } from "./primitives/message/MessageQuote";
 export {
   MessagePrimitiveAttachments,

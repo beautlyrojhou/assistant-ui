@@ -43,13 +43,16 @@ export namespace MessagePrimitivePartGroups {
      * coalesce up to that prefix. Return `null`, `undefined`, or `[]` to leave
      * a part ungrouped (it lands in `case null:` in your render switch).
      *
+     * For best performance, pass a stable reference (module-level constant or
+     * `useCallback`) — an inline arrow function rebuilds the group tree on
+     * every parent render even when `parts` hasn't changed.
+     *
      * @example
      * ```ts
-     * groupBy={(part) =>
+     * const groupBy = (part) =>
      *   part.type === "reasoning" ? ["thought", "reasoning"] :
      *   part.type === "tool-call" ? ["thought", "tool"] :
-     *   null
-     * }
+     *   null;
      * ```
      */
     readonly groupBy: (
