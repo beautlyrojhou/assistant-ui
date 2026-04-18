@@ -1,5 +1,11 @@
 # assistant-ui
 
+## 0.0.90
+
+### Patch Changes
+
+- d53ff4f: chore: remove decorative separator comments across packages
+
 ## 0.0.89
 
 ### Patch Changes

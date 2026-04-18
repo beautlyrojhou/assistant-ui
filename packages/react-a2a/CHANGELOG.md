@@ -1,5 +1,18 @@
 # @assistant-ui/react-a2a
 
+## 0.2.12
+
+### Patch Changes
+
+- d53ff4f: chore: remove decorative separator comments across packages
+- Updated dependencies [c7a274e]
+- Updated dependencies [ca8f526]
+- Updated dependencies [974d15e]
+- Updated dependencies [da0f598]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+  - @assistant-ui/core@0.1.15
+
 ## 0.2.11
 
 ### Patch Changes

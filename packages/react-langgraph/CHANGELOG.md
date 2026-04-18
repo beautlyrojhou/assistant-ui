@@ -1,5 +1,28 @@
 # @assistant-ui/react-langgraph
 
+## 0.13.11
+
+### Patch Changes
+
+- 0ba98dc: fix: set thread.isLoading during load handler in useLangGraphRuntime
+- ca8f526: feat(react-langgraph): add uiComponents option for static and dynamic data renderers
+
+  Add `uiComponents` option to `useLangGraphRuntime` for registering static data renderers by name and a `fallback` renderer for dynamic loading (e.g. LangSmith's `LoadExternalComponent`), directly from the runtime hook.
+
+  Core `DataRenderers` scope also gains a `fallbacks` stack (plus `setFallbackDataUI` method) that the adapter registers into; resolution is `renderers[name][0]` → `fallbacks[0]` → inline `Fallback`.
+
+- 00a359d: fix: tool call status briefly flickers `requires-action` (error icon) before settling on `complete` during LangGraph streaming with subgraphs. The final reconcile now merges the values snapshot with tuple-accumulated state instead of replacing it, so tool results and subgraph-internal messages aren't dropped; metadata survives reconcile; `isRunning` flips to `false` atomically with the final message update (via new `onComplete` callback); and subgraph-level `error` events (pipe-namespaced) no longer mark parent AI messages as incomplete. Pipe-separated subgraph event names (e.g. `messages|tools:call_abc`) are now handled by stripping the namespace before matching.
+- f4762e7: feat: add `unstable_createLangGraphStream` helper that builds a `stream` callback for `useLangGraphRuntime` with `config.abortSignal` and `onDisconnect: "cancel"` wired to `client.runs.stream`.
+- 3e8a67d: feat: add `unstable_threadListAdapter` option to `useLangGraphRuntime` for backing the thread list with a custom `RemoteThreadListAdapter` (e.g. one backed by `client.threads.search()`) without requiring assistant-cloud
+- aa0d509: feat: expose subgraph (namespaced) events to `useLangGraphRuntime` / `useLangGraphMessages` callers. `onMessageChunk` now receives a `namespace` field in `tupleMetadata` for pipe-namespaced `messages|<subgraph>` events, and three new `eventHandlers` are available: `onSubgraphValues(namespace, values)`, `onSubgraphUpdates(namespace, updates)`, and `onSubgraphError(namespace, error)`. Previously `values|<ns>` and `updates|<ns>` events were silently dropped, and `error|<ns>` events could not be attributed to a specific subgraph. Fully additive: top-level `onValues` / `onUpdates` / `onError` behaviour is unchanged (including the existing guarantee that subgraph errors do not mark the parent message as incomplete).
+- Updated dependencies [c7a274e]
+- Updated dependencies [ca8f526]
+- Updated dependencies [974d15e]
+- Updated dependencies [da0f598]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+  - @assistant-ui/core@0.1.15
+
 ## 0.13.10
 
 ### Patch Changes

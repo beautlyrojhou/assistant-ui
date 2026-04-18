@@ -1,5 +1,12 @@
 # @assistant-ui/tap
 
+## 0.5.9
+
+### Patch Changes
+
+- 055dda5: fix: tapEffectEvent returned a frozen callback in production, breaking consumers that stored the reference externally (e.g. trigger popover plugin registry). Both dev and prod now use the same wrapper that reads the latest callback from the ref at call time — matching the documented "stable reference that always calls the most recent version" contract.
+- d53ff4f: chore: remove decorative separator comments across packages
+
 ## 0.5.8
 
 ### Patch Changes

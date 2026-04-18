@@ -1,5 +1,19 @@
 # @assistant-ui/react-ai-sdk
 
+## 1.3.20
+
+### Patch Changes
+
+- 435cfa0: fix: request body `id` in `useChatRuntime` is now the real thread id instead of the literal `"DEFAULT_THREAD_ID"`. `AssistantChatTransport` was resolving `remoteId` from the inner `ExternalStoreThreadListRuntimeCore` (which only echoes its default id); it now uses the outer `RemoteThreadListRuntimeCore` that actually calls the adapter.
+- da0f598: fix: `useAISDKRuntime` now throws when the supplied `ThreadHistoryAdapter` omits `withFormat`, instead of silently dropping all history load/append/update calls. The optional-call chain `historyAdapter.withFormat?.(…).load()` previously short-circuited to `undefined`. The `withFormat`-wrapped adapter is now memoized, and the persist effect short-circuits when no adapter is supplied (avoiding a redundant thread subscription). `ThreadHistoryAdapter.withFormat` gains a JSDoc note clarifying that it is required on the AI SDK path.
+- Updated dependencies [c7a274e]
+- Updated dependencies [ca8f526]
+- Updated dependencies [974d15e]
+- Updated dependencies [da0f598]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+  - @assistant-ui/core@0.1.15
+
 ## 1.3.19
 
 ### Patch Changes

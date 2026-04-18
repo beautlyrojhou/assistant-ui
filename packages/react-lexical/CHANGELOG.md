@@ -1,5 +1,25 @@
 # @assistant-ui/react-lexical
 
+## 0.0.7
+
+### Patch Changes
+
+- d53ff4f: chore: remove decorative separator comments across packages
+- 17958c9: refactor: unify mention/slash under behavior sub-primitives; delete Mention/SlashCommand aliases and the `execute` field on `Unstable_TriggerItem`; split TriggerPopoverResource; rename react-lexical `MentionNode`/`MentionPlugin`/`MentionChipProvider`/`mentionChip` prop to `DirectiveNode`/`DirectivePlugin`/`DirectiveChipProvider`/`directiveChip`; fix IME/Unicode/copy-paste/undo bugs. Breaking (`Unstable_` APIs): replace `onSelect={{type:"insertDirective",formatter}}` with `<Unstable_TriggerPopover.Directive formatter={...}>`; replace `onSelect={{type:"action",handler}}` with `<Unstable_TriggerPopover.Action onExecute={...}>`. Rename `unstable_useToolMentionAdapter` → `unstable_useMentionAdapter` with new `items`/`categories`/`includeModelContextTools` options. `unstable_useSlashCommandAdapter` now returns `{ adapter, action }` — `execute` stays in the hook closure instead of on the item. Rename CSS class `aui-mention-chip` → `aui-directive-chip` and attributes `data-mention-*` → `data-directive-*`.
+- 477fa8a: feat: unify mention and slash command primitives under `Unstable_TriggerPopover`
+- Updated dependencies [c7a274e]
+- Updated dependencies [ca8f526]
+- Updated dependencies [9aa5410]
+- Updated dependencies [974d15e]
+- Updated dependencies [a1f84ae]
+- Updated dependencies [da0f598]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+- Updated dependencies [477fa8a]
+  - @assistant-ui/core@0.1.15
+  - @assistant-ui/react@0.12.26
+  - @assistant-ui/store@0.2.7
+
 ## 0.0.6
 
 ### Patch Changes

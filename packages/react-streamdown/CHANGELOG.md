@@ -1,5 +1,17 @@
 # @assistant-ui/react-streamdown
 
+## 0.1.11
+
+### Patch Changes
+
+- e19c347: fix: pass memoized code component to streamdown instead of invoking it as a function, and render CodeHeader when no SyntaxHighlighter is configured for a block
+- Updated dependencies [9aa5410]
+- Updated dependencies [a1f84ae]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+- Updated dependencies [477fa8a]
+  - @assistant-ui/react@0.12.26
+
 ## 0.1.10
 
 ### Patch Changes

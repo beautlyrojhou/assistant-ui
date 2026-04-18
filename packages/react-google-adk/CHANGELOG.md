@@ -1,5 +1,18 @@
 # @assistant-ui/react-google-adk
 
+## 0.0.7
+
+### Patch Changes
+
+- c15a958: fix(react-google-adk): return the ADK session id as `remoteId` from `createAdkSessionAdapter().initialize()`. Previously the input `threadId` (an internal `__LOCALID_*`) was returned, so later `delete(remoteId)` calls hit `/sessions/__LOCALID_*` and 404'd — masked by the adapter's tolerated 404 on delete.
+- Updated dependencies [c7a274e]
+- Updated dependencies [ca8f526]
+- Updated dependencies [974d15e]
+- Updated dependencies [da0f598]
+- Updated dependencies [d53ff4f]
+- Updated dependencies [17958c9]
+  - @assistant-ui/core@0.1.15
+
 ## 0.0.6
 
 ### Patch Changes
