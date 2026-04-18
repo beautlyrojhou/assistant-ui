@@ -119,7 +119,13 @@ export * as SuggestionPrimitive from "./primitives/suggestion";
 export * as ToolCallPrimitive from "./primitives/toolCall";
 export * as ErrorPrimitive from "./primitives/error";
 export * as DiffPrimitive from "./primitives/diff";
+export * as ScrollPrimitive from "./primitives/scroll";
 export { DiffView, type DiffViewProps } from "./primitives/diff/DiffView";
+export {
+  ScrollableView,
+  type ScrollableViewProps,
+} from "./primitives/scroll/ScrollableView";
+export { useScrollable } from "./primitives/scroll/useScrollable";
 
 // Re-export shared providers from core/react
 export {

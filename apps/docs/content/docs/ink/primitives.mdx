@@ -698,6 +698,159 @@ A built-in component for rendering tool calls with expandable/collapsible output
 | `renderArgs` | `(props: { args, argsText }) => ReactNode` | Custom args renderer |
 | `renderResult` | `(props: { result, isError }) => ReactNode` | Custom result renderer |
 
+## Scroll
+
+```tsx
+import {
+  MessageByIndexProvider,
+  ScrollPrimitive,
+  ScrollableView,
+  useAuiState,
+  useScrollable,
+} from "@assistant-ui/react-ink";
+```
+
+Bounded, sticky-to-bottom scrolling for enumerable terminal content. v1 is generic: you map `thread.messages` yourself and wrap each row with `MessageByIndexProvider`. It does not wrap `ThreadPrimitive.Messages`.
+
+### ScrollableView
+
+Pre-composed `ScrollPrimitive.Root` plus `ScrollPrimitive.Indicator`. The render order is fixed: viewport, paused hint, then the default indicator, followed by any passed `children`.
+
+```tsx
+const messages = useAuiState((s) => s.thread.messages);
+
+<ScrollableView
+  items={messages}
+  height={12}
+  keyExtractor={(message) => message.id}
+  renderItem={(message, index) => (
+    <MessageByIndexProvider key={message.id} index={index}>
+      {message.role === "user" ? <UserMessage /> : <AssistantMessage />}
+    </MessageByIndexProvider>
+  )}
+/>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `items` | `readonly T[]` | Enumerable items to display |
+| `renderItem` | `(item: T, index: number) => ReactNode` | Row renderer |
+| `keyExtractor` | `(item: T, index: number) => string \| number` | Stable item key; use message ids for thread rows |
+| `height` | `number` | Fixed viewport height; when omitted the root self-measures with Ink box metrics |
+| `stickToBottomThreshold` | `number` | Row threshold for sticky-bottom behavior (default: `2`) |
+| `initialScrollToBottom` | `boolean` | Start pinned to the bottom (default: `true`) |
+| `keybindings` | `ScrollKeybindings \| false` | Override or disable built-in keybindings |
+| `renderPausedHint` | `(() => ReactNode) \| false` | Override or suppress the paused hint |
+| `scrollbar` | `ReactNode` | Optional right-hand scrollbar slot, usually `<ScrollPrimitive.Scrollbar />` |
+
+### Root
+
+Context provider and viewport renderer. Keep custom layouts inside the root so child primitives can read scroll state.
+
+```tsx
+<ScrollPrimitive.Root
+  items={messages}
+  keyExtractor={(message) => message.id}
+  renderItem={(message, index) => (
+    <MessageByIndexProvider key={message.id} index={index}>
+      <MessageRow />
+    </MessageByIndexProvider>
+  )}
+  scrollbar={<ScrollPrimitive.Scrollbar />}
+>
+  <ScrollPrimitive.Indicator />
+</ScrollPrimitive.Root>
+```
+
+Default keybindings are ASCII-safe and non-conflicting with the current composer:
+
+- `PgUp`: scroll up one viewport
+- `PgDn`: scroll down one viewport
+- `Home`: jump to top
+- `End`: jump to bottom and resume sticky mode
+
+Arrow keys are intentionally unset by default. Opt in with `keybindings={{ lineUp: "upArrow", lineDown: "downArrow" }}` if your layout can reserve them.
+
+When scrolling away from the bottom, the root shows:
+
+```text
+[paused | End to resume | N new below]
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `items` | `readonly T[]` | Enumerable items to display |
+| `renderItem` | `(item: T, index: number) => ReactNode` | Row renderer |
+| `keyExtractor` | `(item: T, index: number) => string \| number` | Stable identity for height caching |
+| `height` | `number` | Fixed viewport height |
+| `stickToBottomThreshold` | `number` | Sticky-bottom threshold in rows |
+| `initialScrollToBottom` | `boolean` | Start at bottom on first measurement |
+| `keybindings` | `ScrollKeybindings \| false` | Custom bindings or full disable |
+| `renderPausedHint` | `(() => ReactNode) \| false` | Custom paused-hint renderer |
+| `scrollbar` | `ReactNode` | Optional scrollbar node rendered in a right gutter |
+| `children` | `ReactNode` | Additional content inside the root, typically indicators |
+
+### Indicator
+
+Shows the current visible range. Default output is `[N/M]`.
+
+```tsx
+<ScrollPrimitive.Indicator />
+
+<ScrollPrimitive.Indicator
+  format={({ visibleFirstIndex, visibleLastIndex, itemCount }) =>
+    `${visibleFirstIndex}-${visibleLastIndex} of ${itemCount}`
+  }
+/>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `format` | `(state) => string` | Custom formatter receiving visible indices, item count, offsets, and bottom-state |
+
+### Scrollbar
+
+ASCII-safe single-column scrollbar for the root gutter slot.
+
+```tsx
+<ScrollPrimitive.Root
+  items={items}
+  renderItem={(item) => <Row item={item} />}
+  scrollbar={<ScrollPrimitive.Scrollbar />}
+>
+  <ScrollPrimitive.Indicator />
+</ScrollPrimitive.Root>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `char.track` | `string` | Track character (default: `|`) |
+| `char.thumb` | `string` | Thumb character (default: `#`) |
+| `color.track` | `string` | Optional Ink color used when the scrollbar is all track |
+| `color.thumb` | `string` | Optional Ink color for the rendered scrollbar when a thumb is present |
+
+### useScrollable
+
+Hook for custom composition inside `ScrollPrimitive.Root`.
+
+```tsx
+const scroll = useScrollable();
+
+<Text>{`${scroll.visibleFirstIndex}-${scroll.visibleLastIndex}`}</Text>
+```
+
+Returns:
+
+- `scrollOffset`, `maxScrollOffset`, `viewportHeight`, `contentHeight`
+- `itemCount`, `visibleFirstIndex`, `visibleLastIndex`, `isAtBottom`, `autoScroll`
+- `scrollBy()`, `scrollByPage()`, `scrollToTop()`, `scrollToBottom()`, `scrollToItem()`, `setAutoScroll()`
+
+### Limitations
+
+- v1 renders all rows for measurement; true virtualization is planned later.
+- Horizontal scrolling is not supported.
+- On the first measurement pass, content can briefly render with estimated heights before the viewport re-pins.
+
 ## Diff
 
 ```tsx
