@@ -23,7 +23,7 @@ export interface ADKSessionConfig {
   userId?: string;
   /** Optional remote session ID to reconnect to */
   remoteSessionId?: string;
-  /** Timeout in ms for requests (default: 60000) */
+  /** Timeout in ms for requests (default: 30000) */
   timeoutMs?: number;
 }
 
@@ -99,6 +99,8 @@ export function normalizeADKEventToContentParts(
  *
  * Note: tool-call and tool-result parts are intentionally excluded here
  * since ADK manages tool state server-side.
+ *
+ * Note: empty messages are filtered out to avoid sending noise to the backend.
  */
 export function buildADKMessageHistory(
   messages: readonly ThreadMessage[]
@@ -120,6 +122,4 @@ export function buildADKMessageHistory(
 }
 
 /**
- * Extracts the text content from an AppendMessage for sending to ADK.
- */
-export function extractUserMessageText(message: AppendMessage): str
+ * Extracts the text 
