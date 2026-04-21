@@ -118,6 +118,6 @@ export function buildADKMessageHistory(
         content: textParts,
       };
     })
-    // Filter out messages with empty content to keep history clean
+    // Filter out messages with empty content to avoid confusing the ADK backend
     .filter((msg) => msg.content.trim().length > 0);
 }
