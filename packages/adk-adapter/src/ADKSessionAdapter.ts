@@ -23,7 +23,7 @@ export interface ADKSessionConfig {
   userId?: string;
   /** Optional remote session ID to reconnect to */
   remoteSessionId?: string;
-  /** Timeout in ms for requests (default: 30000) */
+  /** Timeout in ms for requests (default: 60000) */
   timeoutMs?: number;
 }
 
@@ -118,8 +118,6 @@ export function buildADKMessageHistory(
         content: textParts,
       };
     })
-    .filter((entry) => entry.content.trim().length > 0);
+    // Filter out messages with empty content to keep the history clean
+    .filter((msg) => msg.content.trim().length > 0);
 }
-
-/**
- * Extracts the text 
